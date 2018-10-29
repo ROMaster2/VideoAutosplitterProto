@@ -1,4 +1,9 @@
-﻿using ImageMagick;
+﻿using Accord;
+using Accord.Imaging;
+using Accord.Imaging.Filters;
+using Accord.Math;
+using Accord.Video;
+using ImageMagick;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,12 +14,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using VideoImageDeltaProto;
-using VideoImageDeltaProto.Models;
+using VideoAutosplitterProto;
+using VideoAutosplitterProto.Models;
 
-using Screen = VideoImageDeltaProto.Models.Screen;
 
-namespace VideoImageDeltaProto.Forms
+using Screen = VideoAutosplitterProto.Models.Screen;
+
+namespace VideoAutosplitterProto.Forms
 {
     public partial class Aligner : Form
     {
@@ -37,11 +43,21 @@ namespace VideoImageDeltaProto.Forms
             Scanner.VideoGeometry.Width * 2,
             Scanner.VideoGeometry.Height * 2);
 
+        private static Bitmap CurrentFrame = new Bitmap(1, 1);
+        private static DateTime LastUpdate = DateTime.Now;
+
         public Aligner()
         {
             InitializeComponent();
             SetAllNumValues(Scanner.CropGeometry);
             FillDdlWatchZone();
+            Scanner.SubscribeToFrameHandler(HandleNewFrame);
+            RefreshThumbnail();
+        }
+
+        private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Scanner.UnsubscribeToFrameHandler(HandleNewFrame);
         }
 
         private void Aligner_ResizeEnd(object sender, EventArgs e)
@@ -56,12 +72,9 @@ namespace VideoImageDeltaProto.Forms
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
-            if (m.Msg == 0x0112)
+            if (m.Msg == 0x0112 && (m.WParam == new IntPtr(0xF030) || m.WParam == new IntPtr(0xF120)))
             {
-                if (m.WParam == new IntPtr(0xF030) || m.WParam == new IntPtr(0xF120))
-                {
-                    RefreshThumbnail();
-                }
+                RefreshThumbnail();
             }
         }
 
@@ -85,18 +98,25 @@ namespace VideoImageDeltaProto.Forms
             return new Geometry(width, height);
         }
 
+        private void HandleNewFrame(object sender, NewFrameEventArgs e)
+        {
+            Invoke((MethodInvoker)delegate {
+                if (DateTime.Now.Subtract(LastUpdate) > TimeSpan.FromSeconds(1))
+                {
+                    LastUpdate = DateTime.Now;
+                    CurrentFrame = (Bitmap)e.Frame.Clone();
+                    RefreshThumbnail();
+                }
+            });
+        }
+
         private void RefreshThumbnail()
         {
             Geometry minGeo = Geometry.Min(Scanner.CropGeometry, GetScaledGeometry(Geometry.Blank));
-            MagickImage mi = null;
-            retry:
-            try
-            {
-                mi = new MagickImage((Bitmap)Scanner.CurrentFrame.Bitmap.Clone());
-            }
-            catch (Exception) { goto retry; }
-            mi.ColorSpace = ColorSpace.RGB;
-            if (Scanner.NeedExtent)
+
+            MagickImage mi = new MagickImage(CurrentFrame);
+
+            if (!Scanner.VideoGeometry.Contains(Scanner.CropGeometry))
             {
                 mi.Extent(Scanner.CropGeometry.ToMagick(), STANDARD_GRAVITY, EXTENT_COLOR);
             }
@@ -109,7 +129,8 @@ namespace VideoImageDeltaProto.Forms
             if (DdlWatchZone.SelectedIndex > 0)
             {
                 var wi = (WatchImage)DdlWatchZone.SelectedItem;
-                var tGeo = wi.Parent.Parent.ThumbnailGeometry.Clone();
+                var tGeo = wi.WatchZone.ThumbnailGeometry.Clone();
+                tGeo.Update(-Scanner.CropGeometry.X, -Scanner.CropGeometry.Y);
 
                 var baseMGeo = new MagickGeometry(100, 100, (int)Math.Round(tGeo.Width), (int)Math.Round(tGeo.Height));
 
@@ -136,21 +157,24 @@ namespace VideoImageDeltaProto.Forms
 
                 if (CkbViewDelta.Checked)
                 {
-                    wi.SetMagickImage(Scanner.ExtraPrecision);
                     using (var deltaImage = wi.MagickImage.Clone())
                     {
-                        deltaImage.Write(@"E:\fuck0.png");
-                        deltaImage.ColorSpace = ColorSpace.RGB;
+                        mi.ColorSpace = wi.Watcher.ColorSpace;
+                        deltaImage.ColorSpace = wi.Watcher.ColorSpace;
                         mi.Crop(baseMGeo, STANDARD_GRAVITY);
+                        //mi.Write(@"E:\fuck0.png");
+                        //deltaImage.Write(@"E:\fuck1.png");
                         mi.Alpha(AlphaOption.Off); // Why is this necessary? It wasn't necessary before.
-                        deltaImage.Equalize();
-                        mi.Equalize();
+                        //mi.Write(@"E:\fuck2.png");
+                        if (wi.Watcher.Equalize)
+                        {
+                            deltaImage.Equalize();
+                            mi.Equalize();
+                        }
                         deltaImage.RePage();
                         mi.RePage();
-                        mi.Write(@"E:\fuck1.png");
-                        deltaImage.Write(@"E:\fuck2.png");
-                        double delta1 = mi.Compare(mi, ErrorMetric.NormalizedCrossCorrelation);
-                        double delta2 = deltaImage.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio);
+                        //mi.Write(@"E:\fuck3.png");
+                        //deltaImage.Write(@"E:\fuck4.png");
                         LblDeltas.Text =
                             mi.Compare(deltaImage, ErrorMetric.PeakSignalToNoiseRatio).ToString("0.####") + "\r\n" +
                             mi.Compare(deltaImage, ErrorMetric.NormalizedCrossCorrelation).ToString("0.####") + "\r\n" +
@@ -161,10 +185,11 @@ namespace VideoImageDeltaProto.Forms
                             mi.Compare(deltaImage, ErrorMetric.StructuralDissimilarity).ToString("0.####") + "\r\n" +
                             mi.Compare(deltaImage, ErrorMetric.StructuralSimilarity).ToString("0.####");
                         mi.Composite(deltaImage, CompositeOperator.Difference);
-                        mi.Write(@"E:\fuck3.png");
+                        //mi.Write(@"E:\fuck5.png");
+                        //deltaImage.Write(@"E:\fuck6.png");
                     }
 
-                    minGeo = minGeo.Min(GetScaledGeometry(wi.Parent.Parent.ThumbnailGeometry));
+                    minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.ThumbnailGeometry));
                 }
             }
 
@@ -172,12 +197,12 @@ namespace VideoImageDeltaProto.Forms
             {
                 var mGeo = minGeo.ToMagick();
                 mGeo.IgnoreAspectRatio = false;
+                mi.ColorSpace = ColorSpace.Lab;
                 mi.FilterType = DEFAULT_SCALE_FILTER;
                 mi.Resize(mGeo);
             }
-
             ThumbnailBox.Size = minGeo.Size.ToDrawing();
-            ThumbnailBox.Image = mi.ToBitmap();
+            ThumbnailBox.Image = mi.ToBitmap(System.Drawing.Imaging.ImageFormat.MemoryBmp);
         }
 
         private void BtnRefreshFrame_Click(object sender, EventArgs e) => RefreshThumbnail();
@@ -190,7 +215,7 @@ namespace VideoImageDeltaProto.Forms
                 using (var haystack = (Bitmap)Scanner.CurrentFrame.Bitmap.Clone())
                 using (var needle = (Bitmap)Scanner.GameProfile.Screens[0].Autofitter.Image.Clone())
                 {
-                    var geo = Test2.Run(needle, haystack);
+                    var geo = AutoAlign(needle, haystack);
                     SetAllNumValues(geo.Min(MAX_VALUES).Max(MIN_VALUES));
                 }
             }
@@ -327,7 +352,7 @@ namespace VideoImageDeltaProto.Forms
             DdlWatchZone.Items.Add("<None>");
             foreach (var wi in Scanner.GameProfile.WatchImages)
             {
-                wi.SetName((Screen)wi.Parent.Parent.Parent, (WatchZone)wi.Parent.Parent, (Watcher)wi.Parent);
+                wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
                 DdlWatchZone.Items.Add(wi);
             }
             DdlWatchZone.SelectedIndex = 0;
@@ -342,5 +367,95 @@ namespace VideoImageDeltaProto.Forms
             Scanner.ExtraPrecision = CkbUseExtraPrecision.Checked;
             RefreshThumbnail();
         }
+
+        public static Geometry AutoAlign(Bitmap needle, Bitmap haystack, double retryThreshold = 1, int retryLimit = 10)
+        {
+            IntPoint[] harrisPoints1;
+            IntPoint[] harrisPoints2;
+            IntPoint[] correlationPoints1;
+            IntPoint[] correlationPoints2;
+            MatrixH homography;
+
+            var mi1 = new MagickImage(needle); mi1.Equalize(); needle = mi1.ToBitmap();
+            var mi2 = new MagickImage(haystack); mi2.Equalize(); haystack = mi2.ToBitmap();
+
+            HarrisCornersDetector harris = new HarrisCornersDetector(0.04f, 20000f);
+            harrisPoints1 = harris.ProcessImage(needle).ToArray();
+            harrisPoints2 = harris.ProcessImage(haystack).ToArray();
+
+            CorrelationMatching matcher = new CorrelationMatching(9, needle, haystack);
+            IntPoint[][] matches = matcher.Match(harrisPoints1, harrisPoints2);
+
+            correlationPoints1 = matches[0];
+            correlationPoints2 = matches[1];
+
+            RansacHomographyEstimator ransac = new RansacHomographyEstimator(0.001, 0.999);
+            homography = ransac.Estimate(correlationPoints1, correlationPoints2);
+
+            IntPoint[] inliers1 = correlationPoints1.Get(ransac.Inliers);
+            IntPoint[] inliers2 = correlationPoints2.Get(ransac.Inliers);
+
+            Concatenate concat = new Concatenate(needle);
+            Bitmap img3 = concat.Apply(haystack);
+
+            PairsMarker pairs = new PairsMarker(
+                inliers1,
+                inliers2.Apply(p => new IntPoint(p.X + needle.Width, p.Y)));
+
+            var Image = pairs.Apply(img3);
+            Image.Save(@"C:\AutoAlignDebug.png");
+
+            var pointCount = inliers1.Length;
+
+            int[] xList1 = new int[pointCount];
+            int[] yList1 = new int[pointCount];
+            int[] xList2 = new int[pointCount];
+            int[] yList2 = new int[pointCount];
+
+            for (int n = 0; n < pointCount; n++)
+            {
+                xList1[n] = inliers1[n].X;
+                yList1[n] = inliers1[n].Y;
+                xList2[n] = inliers2[n].X;
+                yList2[n] = inliers2[n].Y;
+            }
+
+            var f = new double[8] { xList1.Min(), yList1.Min(), xList1.Max(), yList1.Max(), xList2.Min(), yList2.Min(), xList2.Max(), yList2.Max() };
+
+            double distFromX1 = f[0] / needle.Width;
+            double distFromX2 = f[2] / needle.Width;
+            double leftRatio = f[0] / (f[2] - f[0]);
+            double rightRatio = (needle.Width - f[2]) / (f[2] - f[0]);
+            double distFromY1 = f[1] / needle.Height;
+            double distFromY2 = f[3] / needle.Height;
+            double topRatio = f[1] / (f[3] - f[1]);
+            double bottomRatio = (needle.Height - f[3]) / (f[3] - f[1]);
+
+            double leftDist = (f[6] - f[4]) * leftRatio;
+            double rightDist = (f[6] - f[4]) * rightRatio;
+            double topDist = (f[7] - f[5]) * topRatio;
+            double bottomDist = (f[7] - f[5]) * bottomRatio;
+
+            double x = f[4] - leftDist;
+            double y = f[5] - topDist;
+            double width = leftDist + (f[6] - f[4]) + rightDist;
+            double height = topDist + (f[7] - f[5]) + bottomDist;
+
+            mi1.Resize(new MagickGeometry((int)Math.Round(width), (int)Math.Round(height)) { IgnoreAspectRatio = true });
+            var mg = new MagickGeometry((int)Math.Round(x), (int)Math.Round(y), (int)Math.Round(width), (int)Math.Round(height)) { IgnoreAspectRatio = true };
+            mi2.Extent(mg, Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
+
+            double delta = mi1.Compare(mi2, ErrorMetric.NormalizedCrossCorrelation);
+
+            Geometry outGeo = new Geometry(x, y, width, height);
+
+            if (delta < retryThreshold && retryLimit > 0)
+            {
+                retryLimit--;
+                outGeo = AutoAlign(needle, haystack, delta, retryLimit);
+            }
+
+            return outGeo;
+        }
+        }
     }
-}

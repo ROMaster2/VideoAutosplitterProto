@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace VideoImageDeltaProto
+namespace VideoAutosplitterProto
 {
     public struct Scan
     {
@@ -14,6 +14,11 @@ namespace VideoImageDeltaProto
         }
 
         public static readonly Scan Blank = new Scan(Frame.Blank, Frame.Blank);
+
+        public int TimeDelta()
+        {
+            return (int)(CurrentFrame.DateTime - PreviousFrame.DateTime).TotalMilliseconds;
+        }
 
         public void Update(Frame newFrame)
         {

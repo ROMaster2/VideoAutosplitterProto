@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VideoImageDeltaProto.Models
+namespace VideoAutosplitterProto.Models
 {
     public partial struct Geometry
     {

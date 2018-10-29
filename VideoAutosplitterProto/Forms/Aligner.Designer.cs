@@ -1,4 +1,4 @@
-﻿namespace VideoImageDeltaProto.Forms
+﻿namespace VideoAutosplitterProto.Forms
 {
     partial class Aligner
     {
@@ -39,6 +39,11 @@
             this.BtnTryAutoAlign = new System.Windows.Forms.Button();
             this.TLPCore = new System.Windows.Forms.TableLayoutPanel();
             this.ControlPanel = new System.Windows.Forms.Panel();
+            this.CkbUseExtraPrecision = new System.Windows.Forms.CheckBox();
+            this.LblDeltas = new System.Windows.Forms.Label();
+            this.CkbViewDelta = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.DdlWatchZone = new System.Windows.Forms.ComboBox();
             this.BtnResetRegion = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.ShrinkDPad = new System.Windows.Forms.TableLayoutPanel();
@@ -75,11 +80,6 @@
             this.MoveDPad2 = new System.Windows.Forms.PictureBox();
             this.MoveDPad1 = new System.Windows.Forms.PictureBox();
             this.ThumbnailBox = new System.Windows.Forms.PictureBox();
-            this.DdlWatchZone = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
-            this.CkbViewDelta = new System.Windows.Forms.CheckBox();
-            this.LblDeltas = new System.Windows.Forms.Label();
-            this.CkbUseExtraPrecision = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.NumHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumY)).BeginInit();
@@ -314,6 +314,60 @@
             this.ControlPanel.Size = new System.Drawing.Size(200, 762);
             this.ControlPanel.TabIndex = 0;
             // 
+            // CkbUseExtraPrecision
+            // 
+            this.CkbUseExtraPrecision.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.CkbUseExtraPrecision.AutoSize = true;
+            this.CkbUseExtraPrecision.Location = new System.Drawing.Point(43, 159);
+            this.CkbUseExtraPrecision.Name = "CkbUseExtraPrecision";
+            this.CkbUseExtraPrecision.Size = new System.Drawing.Size(118, 17);
+            this.CkbUseExtraPrecision.TabIndex = 244;
+            this.CkbUseExtraPrecision.Text = "Use Extra Precision";
+            this.CkbUseExtraPrecision.UseVisualStyleBackColor = true;
+            this.CkbUseExtraPrecision.CheckedChanged += new System.EventHandler(this.CkbUseExtraPrecision_CheckedChanged);
+            // 
+            // LblDeltas
+            // 
+            this.LblDeltas.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.LblDeltas.Location = new System.Drawing.Point(94, 637);
+            this.LblDeltas.Name = "LblDeltas";
+            this.LblDeltas.Size = new System.Drawing.Size(106, 116);
+            this.LblDeltas.TabIndex = 243;
+            this.LblDeltas.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // CkbViewDelta
+            // 
+            this.CkbViewDelta.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.CkbViewDelta.AutoSize = true;
+            this.CkbViewDelta.Location = new System.Drawing.Point(11, 637);
+            this.CkbViewDelta.Name = "CkbViewDelta";
+            this.CkbViewDelta.Size = new System.Drawing.Size(77, 17);
+            this.CkbViewDelta.TabIndex = 242;
+            this.CkbViewDelta.Text = "View Delta";
+            this.CkbViewDelta.UseVisualStyleBackColor = true;
+            this.CkbViewDelta.CheckedChanged += new System.EventHandler(this.CkbViewDelta_CheckedChanged);
+            // 
+            // label4
+            // 
+            this.label4.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(48, 594);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(98, 13);
+            this.label4.TabIndex = 241;
+            this.label4.Text = "Check WatchZone";
+            // 
+            // DdlWatchZone
+            // 
+            this.DdlWatchZone.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.DdlWatchZone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.DdlWatchZone.FormattingEnabled = true;
+            this.DdlWatchZone.Location = new System.Drawing.Point(10, 610);
+            this.DdlWatchZone.Name = "DdlWatchZone";
+            this.DdlWatchZone.Size = new System.Drawing.Size(180, 21);
+            this.DdlWatchZone.TabIndex = 240;
+            this.DdlWatchZone.SelectedIndexChanged += new System.EventHandler(this.DdlWatchZone_SelectedIndexChanged);
+            // 
             // BtnResetRegion
             // 
             this.BtnResetRegion.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -363,7 +417,7 @@
             // ShrinkDPad9
             // 
             this.ShrinkDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad9.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN9;
+            this.ShrinkDPad9.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN9;
             this.ShrinkDPad9.Location = new System.Drawing.Point(64, 64);
             this.ShrinkDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad9.Name = "ShrinkDPad9";
@@ -376,7 +430,7 @@
             // ShrinkDPad8
             // 
             this.ShrinkDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad8.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN8;
+            this.ShrinkDPad8.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN8;
             this.ShrinkDPad8.Location = new System.Drawing.Point(32, 64);
             this.ShrinkDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad8.Name = "ShrinkDPad8";
@@ -389,7 +443,7 @@
             // ShrinkDPad7
             // 
             this.ShrinkDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad7.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN7;
+            this.ShrinkDPad7.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN7;
             this.ShrinkDPad7.Location = new System.Drawing.Point(0, 64);
             this.ShrinkDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad7.Name = "ShrinkDPad7";
@@ -402,7 +456,7 @@
             // ShrinkDPad6
             // 
             this.ShrinkDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad6.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN6;
+            this.ShrinkDPad6.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN6;
             this.ShrinkDPad6.Location = new System.Drawing.Point(64, 32);
             this.ShrinkDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad6.Name = "ShrinkDPad6";
@@ -415,7 +469,7 @@
             // ShrinkDPad5
             // 
             this.ShrinkDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad5.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN5;
+            this.ShrinkDPad5.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN5;
             this.ShrinkDPad5.Location = new System.Drawing.Point(32, 32);
             this.ShrinkDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad5.Name = "ShrinkDPad5";
@@ -426,7 +480,7 @@
             // ShrinkDPad4
             // 
             this.ShrinkDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad4.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN4;
+            this.ShrinkDPad4.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN4;
             this.ShrinkDPad4.Location = new System.Drawing.Point(0, 32);
             this.ShrinkDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad4.Name = "ShrinkDPad4";
@@ -439,7 +493,7 @@
             // ShrinkDPad3
             // 
             this.ShrinkDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad3.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN3;
+            this.ShrinkDPad3.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN3;
             this.ShrinkDPad3.Location = new System.Drawing.Point(64, 0);
             this.ShrinkDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad3.Name = "ShrinkDPad3";
@@ -452,7 +506,7 @@
             // ShrinkDPad2
             // 
             this.ShrinkDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad2.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN2;
+            this.ShrinkDPad2.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN2;
             this.ShrinkDPad2.Location = new System.Drawing.Point(32, 0);
             this.ShrinkDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad2.Name = "ShrinkDPad2";
@@ -465,7 +519,7 @@
             // ShrinkDPad1
             // 
             this.ShrinkDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ShrinkDPad1.Image = global::VideoImageDeltaProto.Properties.Resources.DPadN1;
+            this.ShrinkDPad1.Image = global::VideoAutosplitterProto.Properties.Resources.DPadN1;
             this.ShrinkDPad1.Location = new System.Drawing.Point(0, 0);
             this.ShrinkDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.ShrinkDPad1.Name = "ShrinkDPad1";
@@ -513,7 +567,7 @@
             // GrowDPad9
             // 
             this.GrowDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad9.Image = global::VideoImageDeltaProto.Properties.Resources.DPad9;
+            this.GrowDPad9.Image = global::VideoAutosplitterProto.Properties.Resources.DPad9;
             this.GrowDPad9.Location = new System.Drawing.Point(64, 64);
             this.GrowDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad9.Name = "GrowDPad9";
@@ -526,7 +580,7 @@
             // GrowDPad8
             // 
             this.GrowDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad8.Image = global::VideoImageDeltaProto.Properties.Resources.DPad8;
+            this.GrowDPad8.Image = global::VideoAutosplitterProto.Properties.Resources.DPad8;
             this.GrowDPad8.Location = new System.Drawing.Point(32, 64);
             this.GrowDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad8.Name = "GrowDPad8";
@@ -539,7 +593,7 @@
             // GrowDPad7
             // 
             this.GrowDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad7.Image = global::VideoImageDeltaProto.Properties.Resources.DPad7;
+            this.GrowDPad7.Image = global::VideoAutosplitterProto.Properties.Resources.DPad7;
             this.GrowDPad7.Location = new System.Drawing.Point(0, 64);
             this.GrowDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad7.Name = "GrowDPad7";
@@ -552,7 +606,7 @@
             // GrowDPad6
             // 
             this.GrowDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad6.Image = global::VideoImageDeltaProto.Properties.Resources.DPad6;
+            this.GrowDPad6.Image = global::VideoAutosplitterProto.Properties.Resources.DPad6;
             this.GrowDPad6.Location = new System.Drawing.Point(64, 32);
             this.GrowDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad6.Name = "GrowDPad6";
@@ -565,7 +619,7 @@
             // GrowDPad5
             // 
             this.GrowDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad5.Image = global::VideoImageDeltaProto.Properties.Resources.DPad5;
+            this.GrowDPad5.Image = global::VideoAutosplitterProto.Properties.Resources.DPad5;
             this.GrowDPad5.Location = new System.Drawing.Point(32, 32);
             this.GrowDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad5.Name = "GrowDPad5";
@@ -576,7 +630,7 @@
             // GrowDPad4
             // 
             this.GrowDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad4.Image = global::VideoImageDeltaProto.Properties.Resources.DPad4;
+            this.GrowDPad4.Image = global::VideoAutosplitterProto.Properties.Resources.DPad4;
             this.GrowDPad4.Location = new System.Drawing.Point(0, 32);
             this.GrowDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad4.Name = "GrowDPad4";
@@ -589,7 +643,7 @@
             // GrowDPad3
             // 
             this.GrowDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad3.Image = global::VideoImageDeltaProto.Properties.Resources.DPad3;
+            this.GrowDPad3.Image = global::VideoAutosplitterProto.Properties.Resources.DPad3;
             this.GrowDPad3.Location = new System.Drawing.Point(64, 0);
             this.GrowDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad3.Name = "GrowDPad3";
@@ -602,7 +656,7 @@
             // GrowDPad2
             // 
             this.GrowDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad2.Image = global::VideoImageDeltaProto.Properties.Resources.DPad2;
+            this.GrowDPad2.Image = global::VideoAutosplitterProto.Properties.Resources.DPad2;
             this.GrowDPad2.Location = new System.Drawing.Point(32, 0);
             this.GrowDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad2.Name = "GrowDPad2";
@@ -615,7 +669,7 @@
             // GrowDPad1
             // 
             this.GrowDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrowDPad1.Image = global::VideoImageDeltaProto.Properties.Resources.DPad1;
+            this.GrowDPad1.Image = global::VideoAutosplitterProto.Properties.Resources.DPad1;
             this.GrowDPad1.Location = new System.Drawing.Point(0, 0);
             this.GrowDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.GrowDPad1.Name = "GrowDPad1";
@@ -674,7 +728,7 @@
             // MoveDPad9
             // 
             this.MoveDPad9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad9.Image = global::VideoImageDeltaProto.Properties.Resources.DPad9;
+            this.MoveDPad9.Image = global::VideoAutosplitterProto.Properties.Resources.DPad9;
             this.MoveDPad9.Location = new System.Drawing.Point(64, 64);
             this.MoveDPad9.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad9.Name = "MoveDPad9";
@@ -687,7 +741,7 @@
             // MoveDPad8
             // 
             this.MoveDPad8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad8.Image = global::VideoImageDeltaProto.Properties.Resources.DPad8;
+            this.MoveDPad8.Image = global::VideoAutosplitterProto.Properties.Resources.DPad8;
             this.MoveDPad8.Location = new System.Drawing.Point(32, 64);
             this.MoveDPad8.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad8.Name = "MoveDPad8";
@@ -700,7 +754,7 @@
             // MoveDPad7
             // 
             this.MoveDPad7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad7.Image = global::VideoImageDeltaProto.Properties.Resources.DPad7;
+            this.MoveDPad7.Image = global::VideoAutosplitterProto.Properties.Resources.DPad7;
             this.MoveDPad7.Location = new System.Drawing.Point(0, 64);
             this.MoveDPad7.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad7.Name = "MoveDPad7";
@@ -713,7 +767,7 @@
             // MoveDPad6
             // 
             this.MoveDPad6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad6.Image = global::VideoImageDeltaProto.Properties.Resources.DPad6;
+            this.MoveDPad6.Image = global::VideoAutosplitterProto.Properties.Resources.DPad6;
             this.MoveDPad6.Location = new System.Drawing.Point(64, 32);
             this.MoveDPad6.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad6.Name = "MoveDPad6";
@@ -726,7 +780,7 @@
             // MoveDPad5
             // 
             this.MoveDPad5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad5.Image = global::VideoImageDeltaProto.Properties.Resources.DPad5;
+            this.MoveDPad5.Image = global::VideoAutosplitterProto.Properties.Resources.DPad5;
             this.MoveDPad5.Location = new System.Drawing.Point(32, 32);
             this.MoveDPad5.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad5.Name = "MoveDPad5";
@@ -737,7 +791,7 @@
             // MoveDPad4
             // 
             this.MoveDPad4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad4.Image = global::VideoImageDeltaProto.Properties.Resources.DPad4;
+            this.MoveDPad4.Image = global::VideoAutosplitterProto.Properties.Resources.DPad4;
             this.MoveDPad4.Location = new System.Drawing.Point(0, 32);
             this.MoveDPad4.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad4.Name = "MoveDPad4";
@@ -750,7 +804,7 @@
             // MoveDPad3
             // 
             this.MoveDPad3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad3.Image = global::VideoImageDeltaProto.Properties.Resources.DPad3;
+            this.MoveDPad3.Image = global::VideoAutosplitterProto.Properties.Resources.DPad3;
             this.MoveDPad3.Location = new System.Drawing.Point(64, 0);
             this.MoveDPad3.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad3.Name = "MoveDPad3";
@@ -763,7 +817,7 @@
             // MoveDPad2
             // 
             this.MoveDPad2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad2.Image = global::VideoImageDeltaProto.Properties.Resources.DPad2;
+            this.MoveDPad2.Image = global::VideoAutosplitterProto.Properties.Resources.DPad2;
             this.MoveDPad2.Location = new System.Drawing.Point(32, 0);
             this.MoveDPad2.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad2.Name = "MoveDPad2";
@@ -776,7 +830,7 @@
             // MoveDPad1
             // 
             this.MoveDPad1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MoveDPad1.Image = global::VideoImageDeltaProto.Properties.Resources.DPad1;
+            this.MoveDPad1.Image = global::VideoAutosplitterProto.Properties.Resources.DPad1;
             this.MoveDPad1.Location = new System.Drawing.Point(0, 0);
             this.MoveDPad1.Margin = new System.Windows.Forms.Padding(0);
             this.MoveDPad1.Name = "MoveDPad1";
@@ -796,60 +850,6 @@
             this.ThumbnailBox.TabIndex = 232;
             this.ThumbnailBox.TabStop = false;
             // 
-            // DdlWatchZone
-            // 
-            this.DdlWatchZone.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.DdlWatchZone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.DdlWatchZone.FormattingEnabled = true;
-            this.DdlWatchZone.Location = new System.Drawing.Point(10, 610);
-            this.DdlWatchZone.Name = "DdlWatchZone";
-            this.DdlWatchZone.Size = new System.Drawing.Size(180, 21);
-            this.DdlWatchZone.TabIndex = 240;
-            this.DdlWatchZone.SelectedIndexChanged += new System.EventHandler(this.DdlWatchZone_SelectedIndexChanged);
-            // 
-            // label4
-            // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(48, 594);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(98, 13);
-            this.label4.TabIndex = 241;
-            this.label4.Text = "Check WatchZone";
-            // 
-            // CkbViewDelta
-            // 
-            this.CkbViewDelta.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.CkbViewDelta.AutoSize = true;
-            this.CkbViewDelta.Location = new System.Drawing.Point(11, 637);
-            this.CkbViewDelta.Name = "CkbViewDelta";
-            this.CkbViewDelta.Size = new System.Drawing.Size(77, 17);
-            this.CkbViewDelta.TabIndex = 242;
-            this.CkbViewDelta.Text = "View Delta";
-            this.CkbViewDelta.UseVisualStyleBackColor = true;
-            this.CkbViewDelta.CheckedChanged += new System.EventHandler(this.CkbViewDelta_CheckedChanged);
-            // 
-            // LblDeltas
-            // 
-            this.LblDeltas.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.LblDeltas.Location = new System.Drawing.Point(94, 637);
-            this.LblDeltas.Name = "LblDeltas";
-            this.LblDeltas.Size = new System.Drawing.Size(106, 116);
-            this.LblDeltas.TabIndex = 243;
-            this.LblDeltas.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
-            // CkbUseExtraPrecision
-            // 
-            this.CkbUseExtraPrecision.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.CkbUseExtraPrecision.AutoSize = true;
-            this.CkbUseExtraPrecision.Location = new System.Drawing.Point(43, 159);
-            this.CkbUseExtraPrecision.Name = "CkbUseExtraPrecision";
-            this.CkbUseExtraPrecision.Size = new System.Drawing.Size(118, 17);
-            this.CkbUseExtraPrecision.TabIndex = 244;
-            this.CkbUseExtraPrecision.Text = "Use Extra Precision";
-            this.CkbUseExtraPrecision.UseVisualStyleBackColor = true;
-            this.CkbUseExtraPrecision.CheckedChanged += new System.EventHandler(this.CkbUseExtraPrecision_CheckedChanged);
-            // 
             // Aligner
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -858,6 +858,7 @@
             this.Controls.Add(this.TLPCore);
             this.Name = "Aligner";
             this.Text = "Aligner";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Aligner_FormClosing);
             this.ResizeEnd += new System.EventHandler(this.Aligner_ResizeEnd);
             ((System.ComponentModel.ISupportInitialize)(this.NumHeight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumWidth)).EndInit();

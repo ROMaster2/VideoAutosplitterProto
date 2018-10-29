@@ -9,14 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using VideoImageDeltaProto.Forms;
-using VideoImageDeltaProto.Models;
+using VideoAutosplitterProto.Forms;
+using VideoAutosplitterProto.Models;
 using System.IO;
 using System.Linq;
 
 using Size = System.Drawing.Size;
 
-namespace VideoImageDeltaProto
+namespace VideoAutosplitterProto
 {
     static class Scanner
     {
@@ -80,7 +80,7 @@ namespace VideoImageDeltaProto
                         foreach (var wz in GameProfile.Screens[0].WatchZones)
                         {
                             var geo = wz.Geometry;
-                            geo.RemoveAnchor(wz.Parent.Geometry);
+                            geo.RemoveAnchor(wz.Screen.Geometry);
                             x = Math.Min(x, geo.X);
                             y = Math.Min(y, geo.Y);
                             width = Math.Max(width, geo.X + geo.Width);
@@ -180,8 +180,9 @@ namespace VideoImageDeltaProto
                 foreach (var wz in GameProfile.Screens[0].WatchZones)
                 {
                     var g = wz.Geometry;
-                    g.RemoveAnchor(wz.Parent.Geometry);
+                    g.RemoveAnchor(wz.Screen.Geometry);
                     g.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
+                    g.Update(CropGeometry.X, CropGeometry.Y);
                     wz.ThumbnailGeometry = g;
 
                     foreach (var wi in wz.WatchImages)
@@ -194,6 +195,17 @@ namespace VideoImageDeltaProto
             }
         }
 
+        // May need to update to support multiple channels.
+        private static MagickImage Untitled(MagickImage input, int channelIndex)
+        {
+            MagickImage mi = (MagickImage)input.Clone();
+            if (channelIndex > -1)
+            {
+                mi = (MagickImage)mi.Separate().ToArray()[channelIndex];
+            }
+            return mi;
+        }
+
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = DateTime.Now;
@@ -201,7 +213,7 @@ namespace VideoImageDeltaProto
             CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
             CurrentIndex++;
 
-            if (_VideoGeometry.Size != e.Frame.Size.ToWindows()) _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
+            if (_VideoGeometry.Size.IsEmpty) _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
 
             if (GameProfile != null)
             {
@@ -213,34 +225,19 @@ namespace VideoImageDeltaProto
         // Todo: Make into array returning task
         public static void Run2(Scan scan)
         {
-            using (var fileImageBase = new MagickImage((Bitmap)scan.CurrentFrame.Bitmap))
+            using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
             {
-                if (NeedExtent)
+                Parallel.ForEach(GameProfile.Screens[0].WatchZones, (wz) =>
+                //foreach (var wz in GameProfile.Screens[0].WatchZones)
                 {
-                    fileImageBase.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
-                }
-                else
-                {
-                    fileImageBase.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
-                }
-                fileImageBase.RePage();
-                if (CurrentIndex % 300 == 0) fileImageBase.Write(@"E:\test6.png");
-                foreach (var wz in GameProfile.Screens[0].WatchZones)
-                {
-                    var tmp = wz.ThumbnailGeometry;
-                    tmp.Update(-TrueCropGeometry.X, -TrueCropGeometry.Y);
-                    var mg = tmp.ToMagick();
-                    using (var fileImageCropped = (MagickImage)fileImageBase.Clone())
+                    var thumbGeo = wz.ThumbnailGeometry.ToMagick();
+                    using (var fileImageCropped = (MagickImage)fileImageBase.Clone(thumbGeo))
                     {
-                        fileImageCropped.Crop(mg, wz.ThumbnailGeometry.Anchor.ToGravity());
-                        if (CurrentIndex % 300 == 0) fileImageCropped.Write(@"E:\test5.png");
                         foreach (var w in wz.Watches)
                         {
-                            fileImageCropped.ColorSpace = w.ColorSpace; // Can safely change since it doesn't affect pixel data.
-                            // May need to update to support multiple channels.
+                            fileImageCropped.ColorSpace = w.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
                             using (var fileImageComposed = Untitled(fileImageCropped, w.Channel))
                             {
-                                if (CurrentIndex % 300 == 0) fileImageComposed.Write(@"E:\test4.png");
                                 if (!w.DupeFrameCheck)
                                 {
                                     foreach (var wi in w.WatchImages)
@@ -248,19 +245,15 @@ namespace VideoImageDeltaProto
                                         using (var deltaImage = wi.MagickImage.Clone())
                                         using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
                                         {
-                                            //if (deltaImage.HasAlpha)
-                                            //{
-                                            //    fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-                                            //}
-                                            deltaImage.ColorSpace = w.ColorSpace;
-                                            var a = (float)deltaImage.Compare(fileImageCompare,
-                                                ErrorMetric.PeakSignalToNoiseRatio);
-                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], a);
+                                            if (w.Equalize) fileImageCompare.Equalize();
 
-                                            if (CurrentIndex % 300 == 0)
+                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, w.ErrorMetric);
+                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], imageDelta);
+
+                                            if (CurrentIndex % 300 == 0 && wi.Index == 0)
                                             {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImage.Write(@"E:\test3.png");
+                                                //fileImageCompare.Write(@"E:\test2.png");
+                                                //deltaImage.Write(@"E:\test3.png");
                                             }
                                         }
                                     }
@@ -281,37 +274,25 @@ namespace VideoImageDeltaProto
                                             deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
                                         }
                                         deltaImagePre.RePage();
-                                        deltaImagePre.Crop(mg, wz.ThumbnailGeometry.Anchor.ToGravity());
+                                        deltaImagePre.Crop(thumbGeo, wz.ThumbnailGeometry.Anchor.ToGravity());
                                         deltaImagePre.ColorSpace = w.ColorSpace;
-                                        using (var deltaImage = (w.Channel > -1) ? (MagickImage)deltaImagePre.Clone() :
-                                            (MagickImage)deltaImagePre.Clone().Separate().ToArray()[w.Channel])
+                                        using (var deltaImage = Untitled(deltaImagePre, w.Channel))
                                         {
-                                            if (CurrentIndex % 300 == 0)
-                                            {
-                                                deltaImagePre.Write(@"E:\test9.png");
-                                            }
+                                            if (w.Equalize) fileImageCompare.Equalize();
 
-                                            var a = (float)deltaImagePre.Compare(fileImageCompare,
-                                                ErrorMetric.PeakSignalToNoiseRatio);
-                                            Interlocked.Exchange(ref Program.floatArray[18], a);
-
-
-                                            if (CurrentIndex % 300 == 0)
-                                            {
-                                                fileImageCompare.Write(@"E:\test2.png");
-                                                deltaImagePre.Write(@"E:\test3.png");
-                                                fileImageComposed.Write(@"E:\test4.png");
-                                                fileImageCropped.Write(@"E:\test5.png");
-                                                fileImageBase.Write(@"E:\test6.png");
-                                            }
+                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, w.ErrorMetric);
+                                            Interlocked.Exchange(ref Program.floatArray[18], imageDelta);
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
+                });
+                //}
             }
+            var timeDelta = scan.TimeDelta();
+            Interlocked.Exchange(ref Program.timeDelta, timeDelta);
             scan.Clean();
         }
 
@@ -418,16 +399,6 @@ namespace VideoImageDeltaProto
                 }
             }
             scan.Clean();
-        }
-
-        private static MagickImage Untitled(MagickImage input, sbyte channel)
-        {
-            MagickImage mi = (MagickImage)input.Clone();
-            if (channel > -1)
-            {
-                mi = (MagickImage)mi.Separate().ToArray()[channel];
-            }
-            return mi;
         }
 
         public static void RunOld()

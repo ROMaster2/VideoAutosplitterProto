@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{C345847B-2C44-4200-9236-0D414C454C3D}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>VideoImageDeltaProto</RootNamespace>
-    <AssemblyName>VideoImageDeltaProto</AssemblyName>
+    <RootNamespace>VideoAutosplitterProto</RootNamespace>
+    <AssemblyName>VideoAutosplitterProto</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

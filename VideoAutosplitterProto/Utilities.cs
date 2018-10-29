@@ -21,12 +21,12 @@ using System.Timers;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using VideoImageDeltaProto;
-using VideoImageDeltaProto.Models;
+using VideoAutosplitterProto;
+using VideoAutosplitterProto.Models;
 
 using System.Runtime.InteropServices;
 
-namespace VideoImageDeltaProto
+namespace VideoAutosplitterProto
 {
     public static class Utilities
     {

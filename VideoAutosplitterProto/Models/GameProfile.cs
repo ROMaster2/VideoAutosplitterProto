@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace VideoImageDeltaProto.Models
+namespace VideoAutosplitterProto.Models
 {
     public class GameProfile : IGeometry
     {

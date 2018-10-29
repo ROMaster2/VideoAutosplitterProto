@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace VideoImageDeltaProto.Models
+namespace VideoAutosplitterProto.Models
 {
     public struct Bag
     {

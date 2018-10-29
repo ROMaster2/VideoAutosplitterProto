@@ -1,7 +1,7 @@
 ﻿using ImageMagick;
 using System;
 
-namespace VideoImageDeltaProto.Models
+namespace VideoAutosplitterProto.Models
 {
     [Flags]
     public enum Anchor

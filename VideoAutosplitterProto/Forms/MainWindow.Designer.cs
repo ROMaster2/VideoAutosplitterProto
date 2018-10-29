@@ -1,4 +1,4 @@
-﻿namespace VideoImageDeltaProto.Forms
+﻿namespace VideoAutosplitterProto.Forms
 {
     partial class MainWindow
     {

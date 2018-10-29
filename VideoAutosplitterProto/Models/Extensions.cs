@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace VideoImageDeltaProto
+namespace VideoAutosplitterProto
 {
     public static partial class Extensions
     {

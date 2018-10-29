@@ -1,4 +1,4 @@
-﻿namespace VideoImageDeltaProto.Models
+﻿namespace VideoAutosplitterProto.Models
 {
     public enum PreviewType
     {

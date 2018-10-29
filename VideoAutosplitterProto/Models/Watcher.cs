@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace VideoImageDeltaProto.Models
+namespace VideoAutosplitterProto.Models
 {
     public class Watcher : IGeometry
     {
@@ -17,18 +17,23 @@ namespace VideoImageDeltaProto.Models
 
         internal Watcher() { }
 
-        public double Frequency;
+        public double Frequency = 1d;
+
         public ColorSpace ColorSpace = ColorSpace.RGB;
-        public sbyte Channel = -1;
-        //public CompositeOperator Compositer; // Why did I want this added?
+        public int Channel = -1;
+        public bool Equalize = true;
+
+        public ErrorMetric ErrorMetric = ErrorMetric.NormalizedCrossCorrelation;
+
         public bool DupeFrameCheck = false;
+        //public CompositeOperator Compositer; // Todo
+
         public List<WatchImage> WatchImages = new List<WatchImage>();
 
         [XmlIgnore]
         public Screen Screen { get { return WatchZone.Screen; } }
         [XmlIgnore]
         public WatchZone WatchZone { get { return (WatchZone)Parent; } }
-
 
         public WatchImage AddWatchImage(string filePath)
         {

@@ -10,9 +10,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using VideoImageDeltaProto.Models;
+using VideoAutosplitterProto.Models;
 
-namespace VideoImageDeltaProto.Forms
+namespace VideoAutosplitterProto.Forms
 {
     public partial class MainWindow : Form
     {
@@ -21,8 +21,8 @@ namespace VideoImageDeltaProto.Forms
             InitializeComponent();
             fillBoxCaptureDevice();
             // !DEBUGGING!
-            Scanner.GameProfile = GameProfile.FromXml(@"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml");
-            txtGameProfile.Text = @"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml";
+            //Scanner.GameProfile = GameProfile.FromXml(@"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml");
+            //txtGameProfile.Text = @"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml";
             TryStart();
         }
 
