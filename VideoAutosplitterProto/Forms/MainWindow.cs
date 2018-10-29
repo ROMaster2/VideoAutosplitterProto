@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,11 +20,29 @@ namespace VideoAutosplitterProto.Forms
         public MainWindow()
         {
             InitializeComponent();
-            fillBoxCaptureDevice();
-            // !DEBUGGING!
-            //Scanner.GameProfile = GameProfile.FromXml(@"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml");
-            //txtGameProfile.Text = @"C:\Users\Administrator\Pictures\VID\pkmnsnap_features\pkmnsnap.xml";
+            FillBoxCaptureDevice();
+            if (BoxCaptureDevice.Items.Contains(Properties.Settings.Default.VideoDevice))
+            {
+                var idx = BoxCaptureDevice.Items.IndexOf(Properties.Settings.Default.VideoDevice);
+                BoxCaptureDevice.SelectedIndex = idx;
+            }
+            var savedProfile = Properties.Settings.Default.GameProfile;
+            if (File.Exists(savedProfile))
+            {
+                try
+                {
+                    Scanner.GameProfile = GameProfile.FromXml(savedProfile);
+                    txtGameProfile.Text = savedProfile;
+                }
+                catch (Exception) { }
+            }
             TryStart();
+
+            Scanner.CropGeometry = new Geometry(
+                Properties.Settings.Default.CropX,
+                Properties.Settings.Default.CropY,
+                Properties.Settings.Default.CropWidth,
+                Properties.Settings.Default.CropHeight);
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -32,7 +51,7 @@ namespace VideoAutosplitterProto.Forms
             Application.Exit();
         }
 
-        private void btnGameProfile_Click(object sender, EventArgs e)
+        private void BtnGameProfile_Click(object sender, EventArgs e)
         {
             using (var ofd = new OpenFileDialog() { Filter = "XML Files|*.xml", Title = "Load a Game Profile" } )
             {
@@ -60,15 +79,17 @@ namespace VideoAutosplitterProto.Forms
                         Scanner.GameProfile = gp;
                         txtGameProfile.Text = ofd.FileName;
                         TryStart();
+                        Properties.Settings.Default.GameProfile = ofd.FileName;
+                        Properties.Settings.Default.Save();
                     }
                 }
             }
         }
 
-        private void btnCaptureDevice_Click(object sender, EventArgs e)
+        private void BtnCaptureDevice_Click(object sender, EventArgs e)
         {
             retry:
-            var success = fillBoxCaptureDevice();
+            var success = FillBoxCaptureDevice();
             if (!success)
             {
                 DialogResult dr = MessageBox.Show(
@@ -85,51 +106,53 @@ namespace VideoAutosplitterProto.Forms
             }
         }
 
-        private bool fillBoxCaptureDevice()
+        private bool FillBoxCaptureDevice()
         {
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
             if (videoDevices.Count > 0)
             {
-                boxCaptureDevice.Enabled = true;
+                BoxCaptureDevice.Enabled = true;
                 string selectedItem = null;
                 int selectedIndex = 0;
-                if (boxCaptureDevice.SelectedIndex > -1)
+                if (BoxCaptureDevice.SelectedIndex > -1)
                 {
-                    selectedItem = (string)boxCaptureDevice.SelectedItem;
+                    selectedItem = (string)BoxCaptureDevice.SelectedItem;
                 }
 
-                boxCaptureDevice.Items.Clear();
+                BoxCaptureDevice.Items.Clear();
                 for (var i = 0; i < videoDevices.Count; i++)
                 {
-                    boxCaptureDevice.Items.Add(videoDevices[i].Name);
+                    BoxCaptureDevice.Items.Add(videoDevices[i].Name);
                     if (videoDevices[i].Name == selectedItem)
                     {
                         selectedIndex = i;
                     }
                 }
-                boxCaptureDevice.SelectedIndex = selectedIndex;
+                BoxCaptureDevice.SelectedIndex = selectedIndex;
                 return true;
             }
             else
             {
-                boxCaptureDevice.Items.Clear();
-                boxCaptureDevice.Enabled = false;
+                BoxCaptureDevice.Items.Clear();
+                BoxCaptureDevice.Enabled = false;
                 return false;
             }
         }
 
-        private void boxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
+        private void BoxCaptureDevice_SelectedIndexChanged(object sender, EventArgs e)
         {
             Scanner.Stop();
             retry:
             var videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-            var matches = videoDevices.Where(v => v.Name == boxCaptureDevice.Text);
+            var matches = videoDevices.Where(v => v.Name == BoxCaptureDevice.Text);
             if (matches.Count() > 0)
             {
                 var match = matches.First();
                 Scanner.SetVideoSource(match.MonikerString);
                 lblCaptureDevice.Text = "Capture Device - " + Scanner.VideoGeometry.ToString();
+                Properties.Settings.Default.VideoDevice = BoxCaptureDevice.Text;
+                Properties.Settings.Default.Save();
             }
             else
             {
@@ -147,7 +170,7 @@ namespace VideoAutosplitterProto.Forms
                 }
                 else
                 {
-                    fillBoxCaptureDevice();
+                    FillBoxCaptureDevice();
                 }
             }
             TryStart();
@@ -158,15 +181,10 @@ namespace VideoAutosplitterProto.Forms
             if (Scanner.GameProfile != null && Scanner.IsVideoSourceValid())
             {
                 Scanner.Start();
-                //btnTryAutoFit.Enabled = true;
-            }
-            else
-            {
-                //btnTryAutoFit.Enabled = false;
             }
         }
 
-        private void btnSetCaptureRegion_Click(object sender, EventArgs e)
+        private void BtnSetCaptureRegion_Click(object sender, EventArgs e)
         {
             Aligner w = new Aligner();
             w.ShowDialog();

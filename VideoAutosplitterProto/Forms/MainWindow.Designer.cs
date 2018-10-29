@@ -40,10 +40,10 @@
             this.lblSetThreshold = new System.Windows.Forms.Label();
             this.lblTimeActive = new System.Windows.Forms.Label();
             this.lblAbove01 = new System.Windows.Forms.Label();
-            this.boxCaptureDevice = new System.Windows.Forms.ComboBox();
+            this.BoxCaptureDevice = new System.Windows.Forms.ComboBox();
             this.lblCaptureDevice = new System.Windows.Forms.Label();
             this.btnCaptureDevice = new System.Windows.Forms.Button();
-            this.btnSetCaptureRegion = new System.Windows.Forms.Button();
+            this.BtnSetCaptureRegion = new System.Windows.Forms.Button();
             this.lblDetectors = new System.Windows.Forms.Label();
             this.tlpDetectors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numSetThreshold01)).BeginInit();
@@ -57,7 +57,7 @@
             this.btnGameProfile.TabIndex = 0;
             this.btnGameProfile.Text = "Browse...";
             this.btnGameProfile.UseVisualStyleBackColor = true;
-            this.btnGameProfile.Click += new System.EventHandler(this.btnGameProfile_Click);
+            this.btnGameProfile.Click += new System.EventHandler(this.BtnGameProfile_Click);
             // 
             // lblGameProfile
             // 
@@ -212,18 +212,18 @@
             this.lblAbove01.Text = "00:00:00.000";
             this.lblAbove01.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // boxCaptureDevice
+            // BoxCaptureDevice
             // 
-            this.boxCaptureDevice.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.BoxCaptureDevice.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.boxCaptureDevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.boxCaptureDevice.Enabled = false;
-            this.boxCaptureDevice.FormattingEnabled = true;
-            this.boxCaptureDevice.Location = new System.Drawing.Point(87, 66);
-            this.boxCaptureDevice.Name = "boxCaptureDevice";
-            this.boxCaptureDevice.Size = new System.Drawing.Size(298, 21);
-            this.boxCaptureDevice.TabIndex = 4;
-            this.boxCaptureDevice.SelectedIndexChanged += new System.EventHandler(this.boxCaptureDevice_SelectedIndexChanged);
+            this.BoxCaptureDevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.BoxCaptureDevice.Enabled = false;
+            this.BoxCaptureDevice.FormattingEnabled = true;
+            this.BoxCaptureDevice.Location = new System.Drawing.Point(87, 66);
+            this.BoxCaptureDevice.Name = "BoxCaptureDevice";
+            this.BoxCaptureDevice.Size = new System.Drawing.Size(298, 21);
+            this.BoxCaptureDevice.TabIndex = 4;
+            this.BoxCaptureDevice.SelectedIndexChanged += new System.EventHandler(this.BoxCaptureDevice_SelectedIndexChanged);
             // 
             // lblCaptureDevice
             // 
@@ -242,17 +242,17 @@
             this.btnCaptureDevice.TabIndex = 6;
             this.btnCaptureDevice.Text = "Refresh";
             this.btnCaptureDevice.UseVisualStyleBackColor = true;
-            this.btnCaptureDevice.Click += new System.EventHandler(this.btnCaptureDevice_Click);
+            this.btnCaptureDevice.Click += new System.EventHandler(this.BtnCaptureDevice_Click);
             // 
-            // btnSetCaptureRegion
+            // BtnSetCaptureRegion
             // 
-            this.btnSetCaptureRegion.Location = new System.Drawing.Point(12, 93);
-            this.btnSetCaptureRegion.Name = "btnSetCaptureRegion";
-            this.btnSetCaptureRegion.Size = new System.Drawing.Size(373, 23);
-            this.btnSetCaptureRegion.TabIndex = 12;
-            this.btnSetCaptureRegion.Text = "Set Capture Region";
-            this.btnSetCaptureRegion.UseVisualStyleBackColor = true;
-            this.btnSetCaptureRegion.Click += new System.EventHandler(this.btnSetCaptureRegion_Click);
+            this.BtnSetCaptureRegion.Location = new System.Drawing.Point(12, 93);
+            this.BtnSetCaptureRegion.Name = "BtnSetCaptureRegion";
+            this.BtnSetCaptureRegion.Size = new System.Drawing.Size(373, 23);
+            this.BtnSetCaptureRegion.TabIndex = 12;
+            this.BtnSetCaptureRegion.Text = "Set Capture Region";
+            this.BtnSetCaptureRegion.UseVisualStyleBackColor = true;
+            this.BtnSetCaptureRegion.Click += new System.EventHandler(this.BtnSetCaptureRegion_Click);
             // 
             // lblDetectors
             // 
@@ -271,15 +271,15 @@
             this.Controls.Add(this.lblDetectors);
             this.Controls.Add(this.btnCaptureDevice);
             this.Controls.Add(this.lblCaptureDevice);
-            this.Controls.Add(this.boxCaptureDevice);
+            this.Controls.Add(this.BoxCaptureDevice);
             this.Controls.Add(this.tlpDetectors);
             this.Controls.Add(this.txtGameProfile);
             this.Controls.Add(this.lblGameProfile);
-            this.Controls.Add(this.btnSetCaptureRegion);
+            this.Controls.Add(this.BtnSetCaptureRegion);
             this.Controls.Add(this.btnGameProfile);
             this.MinimumSize = new System.Drawing.Size(413, 320);
             this.Name = "MainWindow";
-            this.Text = "Video Auto-Splitter by ROMaster2";
+            this.Text = "Video Autosplitter Prototype by ROMaster2";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.tlpDetectors.ResumeLayout(false);
             this.tlpDetectors.PerformLayout();
@@ -301,13 +301,13 @@
         private System.Windows.Forms.Label lblFeature;
         private System.Windows.Forms.Label lblDetectionRate;
         private System.Windows.Forms.Label lblSetThreshold;
-        private System.Windows.Forms.ComboBox boxCaptureDevice;
+        private System.Windows.Forms.ComboBox BoxCaptureDevice;
         private System.Windows.Forms.Label lblCaptureDevice;
         private System.Windows.Forms.Button btnCaptureDevice;
         private System.Windows.Forms.Label lblDetectors;
         private System.Windows.Forms.Label lblTimeActive;
         private System.Windows.Forms.Label lblAbove01;
-        private System.Windows.Forms.Button btnSetCaptureRegion;
+        private System.Windows.Forms.Button BtnSetCaptureRegion;
     }
 }
 

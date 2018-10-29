@@ -58,6 +58,11 @@ namespace VideoAutosplitterProto.Forms
         private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
         {
             Scanner.UnsubscribeToFrameHandler(HandleNewFrame);
+            Properties.Settings.Default.CropX = Scanner.CropGeometry.X;
+            Properties.Settings.Default.CropY = Scanner.CropGeometry.Y;
+            Properties.Settings.Default.CropWidth = Scanner.CropGeometry.Width;
+            Properties.Settings.Default.CropHeight = Scanner.CropGeometry.Height;
+            Properties.Settings.Default.Save();
         }
 
         private void Aligner_ResizeEnd(object sender, EventArgs e)
@@ -209,8 +214,7 @@ namespace VideoAutosplitterProto.Forms
 
         private void BtnTryAutoAlign_Click(object sender, EventArgs e)
         {
-            retry:
-            try
+            if (Scanner.GameProfile != null)
             {
                 using (var haystack = (Bitmap)Scanner.CurrentFrame.Bitmap.Clone())
                 using (var needle = (Bitmap)Scanner.GameProfile.Screens[0].Autofitter.Image.Clone())
@@ -219,7 +223,6 @@ namespace VideoAutosplitterProto.Forms
                     SetAllNumValues(geo.Min(MAX_VALUES).Max(MIN_VALUES));
                 }
             }
-            catch (Exception) { goto retry; }
         }
 
         #region Numeric Field Logic/Events
@@ -350,10 +353,13 @@ namespace VideoAutosplitterProto.Forms
         private void FillDdlWatchZone()
         {
             DdlWatchZone.Items.Add("<None>");
-            foreach (var wi in Scanner.GameProfile.WatchImages)
+            if (Scanner.GameProfile != null)
             {
-                wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
-                DdlWatchZone.Items.Add(wi);
+                foreach (var wi in Scanner.GameProfile.WatchImages)
+                {
+                    wi.SetName(wi.Screen, wi.WatchZone, wi.Watcher);
+                    DdlWatchZone.Items.Add(wi);
+                }
             }
             DdlWatchZone.SelectedIndex = 0;
         }

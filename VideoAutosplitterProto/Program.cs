@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using VideoAutosplitterProto.Forms;
+using VideoAutosplitterProto.Models;
 
 namespace VideoAutosplitterProto
 {
