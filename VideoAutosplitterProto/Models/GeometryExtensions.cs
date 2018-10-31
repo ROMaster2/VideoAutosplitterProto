@@ -32,7 +32,7 @@ namespace VideoAutosplitterProto.Models
 
         // Todo: Handle fractional pixels.
 
-        public ImageMagick.MagickGeometry ToMagick(int rounding = 0)
+        public ImageMagick.MagickGeometry ToMagick(bool includePoint = true, int rounding = 0)
         {
 
             const double rounder = 0.4999999999; // Difficult to be precise without posible error.
@@ -44,33 +44,33 @@ namespace VideoAutosplitterProto.Models
             switch (rounding)
             {
                 case 2: // Ceiling
-                    x = (int)Math.Ceiling(X);
-                    y = (int)Math.Ceiling(Y);
+                    x = includePoint ? (int)Math.Ceiling(X) : 0;
+                    y = includePoint ? (int)Math.Ceiling(Y) : 0;
                     width = (int)Math.Ceiling(Width);
                     height = (int)Math.Ceiling(Height);
                     break;
                 case 1: // Roundup
-                    x = (int)Math.Round(X + (Math.Sign(X) > 0 ? rounder : -rounder));
-                    y = (int)Math.Round(Y + (Math.Sign(Y) > 0 ? rounder : -rounder));
+                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) > 0 ? rounder : -rounder)) : 0;
+                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) > 0 ? rounder : -rounder)) : 0;
                     width = (int)Math.Round(Width + (Math.Sign(Width) > 0 ? rounder : -rounder));
                     height = (int)Math.Round(Height + (Math.Sign(Height) > 0 ? rounder : -rounder));
                     break;
                 case 0: // Round
                 default:
-                    x = (int)Math.Round(X);
-                    y = (int)Math.Round(Y);
+                    x = includePoint ? (int)Math.Round(X) : 0;
+                    y = includePoint ? (int)Math.Round(Y) : 0;
                     width = (int)Math.Round(Width);
                     height = (int)Math.Round(Height);
                     break;
                 case -1: // Rounddown
-                    x = (int)Math.Round(X + (Math.Sign(X) < 0 ? rounder : -rounder));
-                    y = (int)Math.Round(Y + (Math.Sign(Y) < 0 ? rounder : -rounder));
+                    x = includePoint ? (int)Math.Round(X + (Math.Sign(X) < 0 ? rounder : -rounder)) : 0;
+                    y = includePoint ? (int)Math.Round(Y + (Math.Sign(Y) < 0 ? rounder : -rounder)) : 0;
                     width = (int)Math.Round(Width + (Math.Sign(Width) < 0 ? rounder : -rounder));
                     height = (int)Math.Round(Height + (Math.Sign(Height) < 0 ? rounder : -rounder));
                     break;
                 case -2: // Floor
-                    x = (int)Math.Floor(X);
-                    y = (int)Math.Floor(Y);
+                    x = includePoint ? (int)Math.Floor(X) : 0;
+                    y = includePoint ? (int)Math.Floor(Y) : 0;
                     width = (int)Math.Floor(Width);
                     height = (int)Math.Floor(Height);
                     break;

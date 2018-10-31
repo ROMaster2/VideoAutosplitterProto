@@ -4,11 +4,11 @@ using System.Xml.Serialization;
 
 namespace VideoAutosplitterProto.Models
 {
-    public class Screen : IGeometry
+    public class Screen
     {
         internal Screen(GameProfile gameProfile, string name, bool useAdvanced, Geometry geometry)
         {
-            Parent = gameProfile;
+            GameProfile = gameProfile;
             Name = name;
             UseAdvanced = useAdvanced;
             Geometry = geometry;
@@ -16,10 +16,19 @@ namespace VideoAutosplitterProto.Models
 
         internal Screen() { }
 
-        public bool UseAdvanced { get; set; }
-        public List<WatchZone> WatchZones { get; set; } = new List<WatchZone>();
+        public string Name;
+        public Geometry Geometry;
+        [XmlIgnore]
+        public Geometry CropGeometry; // Temporary place
+        [XmlIgnore]
+        public Geometry GameGeometry; // Temporary place
+
+        public bool UseAdvanced;
+        public List<WatchZone> WatchZones = new List<WatchZone>();
         public WatchImage Autofitter;
 
+        [XmlIgnore]
+        public GameProfile GameProfile { get; internal set; }
         [XmlIgnore]
         public List<Watcher> Watches
         { get { var a = new List<Watcher>(); a.AddRange(WatchZones.SelectMany(wz => wz.Watches)); return a; } }
@@ -27,21 +36,13 @@ namespace VideoAutosplitterProto.Models
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
 
-
-        public WatchZone AddWatchZone(string name, ScaleType scaleType, Geometry geometry)
-        {
-            var watchZone = new WatchZone(this, name, scaleType, geometry);
-            WatchZones.Add(watchZone);
-            return watchZone;
-        }
-
         public void ReSyncRelationships()
         {
             if (WatchZones.Count > 0)
             {
                 foreach (var wz in WatchZones)
                 {
-                    wz.Parent = this;
+                    wz.Screen = this;
                     wz.ReSyncRelationships();
                 }
             }
@@ -51,7 +52,5 @@ namespace VideoAutosplitterProto.Models
         {
             return Name;
         }
-
     }
-
 }

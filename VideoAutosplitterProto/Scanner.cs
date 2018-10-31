@@ -20,15 +20,17 @@ namespace VideoAutosplitterProto
 {
     static class Scanner
     {
+        private const int FEATURE_COUNT_LIMIT = 32;
+
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
         public static Frame CurrentFrame = Frame.Blank;
         public static List<Scan> ScanBag = new List<Scan>();
-        public static DateTime MostRecentFrameTime = DateTime.Now;
+        public static DateTime MostRecentFrameTime = DateTime.UtcNow;
         public static int CurrentIndex = 0;
 
-        public static bool ExtraPrecision = false;
+        public static bool ExtremePrecision = false;
 
         private static Geometry _VideoGeometry = Geometry.Blank;
         public static Geometry VideoGeometry
@@ -118,7 +120,7 @@ namespace VideoAutosplitterProto
         public static void Stop()
         {
             ScanBag.Clear();
-            MostRecentFrameTime = DateTime.Now;
+            MostRecentFrameTime = DateTime.UtcNow;
             CurrentIndex = 0;
             VideoSource.Stop();
         }
@@ -128,7 +130,7 @@ namespace VideoAutosplitterProto
             if (GameProfile != null)
             {
                 ScanBag.Clear();
-                MostRecentFrameTime = DateTime.Now;
+                MostRecentFrameTime = DateTime.UtcNow;
                 CurrentIndex = 0;
                 UpdateCropGeometry();
                 VideoSource.Start();
@@ -183,11 +185,11 @@ namespace VideoAutosplitterProto
                     g.RemoveAnchor(wz.Screen.Geometry);
                     g.ResizeTo(CropGeometry, GameProfile.Screens[0].Geometry);
                     g.Update(CropGeometry.X, CropGeometry.Y);
-                    wz.ThumbnailGeometry = g;
+                    wz.CropGeometry = g;
 
                     foreach (var wi in wz.WatchImages)
                     {
-                        wi.SetMagickImage(ExtraPrecision);
+                        wi.SetMagickImage(ExtremePrecision);
                         wi.Index = i;
                         i++;
                     }
@@ -208,7 +210,7 @@ namespace VideoAutosplitterProto
 
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
             CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
             CurrentIndex++;
@@ -230,7 +232,7 @@ namespace VideoAutosplitterProto
                 Parallel.ForEach(GameProfile.Screens[0].WatchZones, (wz) =>
                 //foreach (var wz in GameProfile.Screens[0].WatchZones)
                 {
-                    var thumbGeo = wz.ThumbnailGeometry.ToMagick();
+                    var thumbGeo = wz.CropGeometry.ToMagick();
                     using (var fileImageCropped = (MagickImage)fileImageBase.Clone(thumbGeo))
                     {
                         foreach (var w in wz.Watches)
@@ -274,7 +276,7 @@ namespace VideoAutosplitterProto
                                             deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
                                         }
                                         deltaImagePre.RePage();
-                                        deltaImagePre.Crop(thumbGeo, wz.ThumbnailGeometry.Anchor.ToGravity());
+                                        deltaImagePre.Crop(thumbGeo, wz.CropGeometry.Anchor.ToGravity());
                                         deltaImagePre.ColorSpace = w.ColorSpace;
                                         using (var deltaImage = Untitled(deltaImagePre, w.Channel))
                                         {
@@ -313,12 +315,12 @@ namespace VideoAutosplitterProto
                 if (CurrentIndex % 300 == 0) fileImageBase.Write(@"E:\test6.png");
                 foreach (var wz in GameProfile.Screens[0].WatchZones)
                 {
-                    var tmp = wz.ThumbnailGeometry;
+                    var tmp = wz.CropGeometry;
                     tmp.Update(-TrueCropGeometry.X, -TrueCropGeometry.Y);
                     var mg = tmp.ToMagick();
                     using (var fileImageCropped = (MagickImage)fileImageBase.Clone())
                     {
-                        fileImageCropped.Crop(mg, wz.ThumbnailGeometry.Anchor.ToGravity());
+                        fileImageCropped.Crop(mg, wz.CropGeometry.Anchor.ToGravity());
                         if (CurrentIndex % 300 == 0) fileImageCropped.Write(@"E:\test5.png");
                         foreach (var w in wz.Watches)
                         {
@@ -367,7 +369,7 @@ namespace VideoAutosplitterProto
                                             deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
                                         }
                                         deltaImagePre.RePage();
-                                        deltaImagePre.Crop(mg, wz.ThumbnailGeometry.Anchor.ToGravity());
+                                        deltaImagePre.Crop(mg, wz.CropGeometry.Anchor.ToGravity());
                                         deltaImagePre.ColorSpace = w.ColorSpace;
                                         using (var deltaImage = (w.Channel > -1) ? (MagickImage)deltaImagePre.Clone() :
                                             (MagickImage)deltaImagePre.Clone().Separate().ToArray()[w.Channel])
@@ -424,11 +426,11 @@ namespace VideoAutosplitterProto
                                     fileImageBase.RePage();
                                     foreach (var wz in GameProfile.Screens[0].WatchZones)
                                     {
-                                        var mg = wz.ThumbnailGeometry.ToMagick();
+                                        var mg = wz.CropGeometry.ToMagick();
 
                                         using (var fileImageCropped = (MagickImage)fileImageBase.Clone())
                                         {
-                                            fileImageCropped.Extent(mg, wz.ThumbnailGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
+                                            fileImageCropped.Extent(mg, wz.CropGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
                                             foreach (var w in wz.Watches)
                                             {
                                                 var fileImageComposed = (MagickImage)fileImageCropped.Clone();
@@ -478,7 +480,7 @@ namespace VideoAutosplitterProto
                                                     {
                                                         deltaImage.Crop(CropGeometry.ToMagick(), Gravity.Northwest);
                                                         deltaImage.RePage();
-                                                        deltaImage.Extent(mg, wz.ThumbnailGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
+                                                        deltaImage.Extent(mg, wz.CropGeometry.Anchor.ToGravity(), MagickColor.FromRgba(0, 0, 0, 0));
                                                         deltaImage.ColorSpace = w.ColorSpace;
                                                         if (w.Channel > -1)
                                                         {

@@ -6,11 +6,11 @@ using System.Xml.Serialization;
 
 namespace VideoAutosplitterProto.Models
 {
-    public class WatchZone : IGeometry
+    public class WatchZone
     {
         internal WatchZone(Screen screen, string name, ScaleType scaleType, Geometry geometry)
         {
-            Parent = screen;
+            Screen = screen;
             Name = name;
             ScaleType = scaleType;
             Geometry = geometry;
@@ -18,11 +18,16 @@ namespace VideoAutosplitterProto.Models
 
         internal WatchZone() { }
 
-        public ScaleType ScaleType { get; set; }
-        public List<Watcher> Watches { get; set; } = new List<Watcher>();
+        public string Name;
+        public Geometry Geometry;
+        [XmlIgnore]
+        public Geometry CropGeometry;
+
+        public ScaleType ScaleType;
+        public List<Watcher> Watches = new List<Watcher>();
 
         [XmlIgnore]
-        public Screen Screen { get { return (Screen)Parent; } }
+        public Screen Screen { get; internal set; }
         [XmlIgnore]
         public List<WatchImage> WatchImages
         { get { var a = new List<WatchImage>(); a.AddRange(Watches.SelectMany(w => w.WatchImages)); return a; } }
@@ -41,22 +46,16 @@ namespace VideoAutosplitterProto.Models
             {
                 foreach (var w in Watches)
                 {
-                    w.Parent = this;
+                    w.WatchZone = this;
                     w.ReSyncRelationships();
                 }
             }
         }
 
-        public Geometry WithoutScale(Geometry screenGeo, Geometry feedGeo, Geometry gameGeo)
+        public Geometry WithoutScale(Geometry gameGeometry)
         {
-            Geometry GameGeometry = screenGeo;
-            if (gameGeo.HasSize)
-            {
-                GameGeometry = gameGeo;
-            }
-
-            double xScale = feedGeo.Width / GameGeometry.Width;
-            double yScale = feedGeo.Height / GameGeometry.Height;
+            double xScale = gameGeometry.Width  / Screen.Geometry.Width;
+            double yScale = gameGeometry.Height / Screen.Geometry.Height;
 
             double _x = Geometry.X;
             double _y = Geometry.Y;
@@ -65,7 +64,7 @@ namespace VideoAutosplitterProto.Models
 
             if (ScaleType == ScaleType.KeepRatio)
             {
-                double scale = Math.Min(xScale, yScale); // Min or Max?
+                double scale = Math.Min(xScale, yScale); // Min or Max? Probably Min.
                 xScale = scale;
                 yScale = scale;
             }
@@ -77,22 +76,12 @@ namespace VideoAutosplitterProto.Models
                 _height *= yScale;
             }
 
-            return new Geometry(_x, _y, _width, _height, Geometry.Anchor)/*.WithoutAnchor(GameGeometry)*/;
+            return new Geometry(_x, _y, _width, _height, Geometry.Anchor);
         }
 
         override public string ToString()
         {
             return Name;
         }
-
     }
-
-    public enum ScaleType
-    {
-        Undefined = 0,
-        NoScale = 1,
-        KeepRatio = 2,
-        Scale = 3,
-    }
-
 }

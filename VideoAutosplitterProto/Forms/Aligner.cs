@@ -44,7 +44,7 @@ namespace VideoAutosplitterProto.Forms
             Scanner.VideoGeometry.Height * 2);
 
         private static Bitmap CurrentFrame = new Bitmap(1, 1);
-        private static DateTime LastUpdate = DateTime.Now;
+        private static DateTime LastUpdate = DateTime.UtcNow;
 
         public Aligner()
         {
@@ -106,9 +106,9 @@ namespace VideoAutosplitterProto.Forms
         private void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             Invoke((MethodInvoker)delegate {
-                if (DateTime.Now.Subtract(LastUpdate) > TimeSpan.FromSeconds(1))
+                if (DateTime.UtcNow.Subtract(LastUpdate) > TimeSpan.FromSeconds(1))
                 {
-                    LastUpdate = DateTime.Now;
+                    LastUpdate = DateTime.UtcNow;
                     CurrentFrame = (Bitmap)e.Frame.Clone();
                     RefreshThumbnail();
                 }
@@ -134,7 +134,7 @@ namespace VideoAutosplitterProto.Forms
             if (DdlWatchZone.SelectedIndex > 0)
             {
                 var wi = (WatchImage)DdlWatchZone.SelectedItem;
-                var tGeo = wi.WatchZone.ThumbnailGeometry.Clone();
+                var tGeo = wi.WatchZone.CropGeometry;
                 tGeo.Update(-Scanner.CropGeometry.X, -Scanner.CropGeometry.Y);
 
                 var baseMGeo = new MagickGeometry(100, 100, (int)Math.Round(tGeo.Width), (int)Math.Round(tGeo.Height));
@@ -194,7 +194,7 @@ namespace VideoAutosplitterProto.Forms
                         //deltaImage.Write(@"E:\fuck6.png");
                     }
 
-                    minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.ThumbnailGeometry));
+                    minGeo = minGeo.Min(GetScaledGeometry(wi.WatchZone.CropGeometry));
                 }
             }
 
@@ -295,7 +295,7 @@ namespace VideoAutosplitterProto.Forms
         private void AdjustCrop(PictureBox sender, double o1, double o2, double r1, double r2)
         {
             int i = GetDPadID(sender);
-            var geo = Scanner.CropGeometry.Clone();
+            var geo = Scanner.CropGeometry;
 
             switch (i)
             {
@@ -370,7 +370,7 @@ namespace VideoAutosplitterProto.Forms
 
         private void CkbUseExtraPrecision_CheckedChanged(object sender, EventArgs e)
         {
-            Scanner.ExtraPrecision = CkbUseExtraPrecision.Checked;
+            Scanner.ExtremePrecision = CkbUseExtraPrecision.Checked;
             RefreshThumbnail();
         }
 

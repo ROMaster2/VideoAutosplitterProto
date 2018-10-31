@@ -112,14 +112,21 @@
     <Compile Include="Forms\MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ProfileDesigner.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ProfileDesigner.Designer.cs">
+      <DependentUpon>ProfileDesigner.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\Anchor.cs" />
     <Compile Include="Models\Bag.cs" />
+    <Compile Include="Models\CompiledFeatures.cs" />
     <Compile Include="Models\Extensions.cs" />
     <Compile Include="Models\GameProfile.cs" />
     <Compile Include="Models\Geometry.cs" />
     <Compile Include="Models\GeometryExtensions.cs" />
-    <Compile Include="Models\IGeometry.cs" />
     <Compile Include="Models\PreviewType.cs" />
+    <Compile Include="Models\ScaleType.cs" />
     <Compile Include="Models\Screen.cs" />
     <Compile Include="Models\Watcher.cs" />
     <Compile Include="Models\WatchImage.cs" />
@@ -136,6 +143,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ProfileDesigner.resx">
+      <DependentUpon>ProfileDesigner.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

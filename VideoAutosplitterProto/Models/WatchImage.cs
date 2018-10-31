@@ -10,11 +10,11 @@ using System.Xml.Serialization;
 
 namespace VideoAutosplitterProto.Models
 {
-    public class WatchImage : IGeometry
+    public class WatchImage
     {
         internal WatchImage(Watcher watcher, string filePath)
         {
-            Parent = watcher;
+            Watcher = watcher;
             FilePath = filePath;
         }
 
@@ -22,7 +22,23 @@ namespace VideoAutosplitterProto.Models
 
         internal WatchImage() { }
 
-        public string FilePath { get; set; }
+        public string FilePath;
+
+        private string _Name;
+        public string Name
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(_Name))
+                    return _Name;
+                else
+                    return FileName;
+            }
+            set
+            {
+                _Name = value;
+            }
+        }
 
         private Image _Image;
         public Image Image
@@ -52,7 +68,7 @@ namespace VideoAutosplitterProto.Models
         [XmlIgnore]
         public WatchZone WatchZone { get { return Watcher.WatchZone; } }
         [XmlIgnore]
-        public Watcher Watcher { get { return (Watcher)Parent; } }
+        public Watcher Watcher { get; internal set; }
 
         public int Index;
 
@@ -67,7 +83,7 @@ namespace VideoAutosplitterProto.Models
 
         public void SetName(Screen screen, WatchZone watchZone, Watcher watcher)
         {
-            Name = screen.Name + "/" + watchZone.Name + "/" + watcher.Name + " - " + FileName;
+            _Name = screen.Name + "/" + watchZone.Name + "/" + watcher.Name + " - " + FileName;
         }
 
         public void SetMagickImage(bool extremePrecision)
@@ -79,8 +95,8 @@ namespace VideoAutosplitterProto.Models
             if (!extremePrecision)
             {
                 var mGeo = new MagickGeometry(
-                    (int)Math.Round(WatchZone.ThumbnailGeometry.Width),
-                    (int)Math.Round(WatchZone.ThumbnailGeometry.Height))
+                    (int)Math.Round(WatchZone.CropGeometry.Width),
+                    (int)Math.Round(WatchZone.CropGeometry.Height))
                 {
                     IgnoreAspectRatio = true
                 };
@@ -92,7 +108,7 @@ namespace VideoAutosplitterProto.Models
                 var underlay = new MagickImage(MagickColor.FromRgba(0, 0, 0, 0), (int)Screen.Geometry.Width, (int)Screen.Geometry.Height);
                 underlay.Composite(mi, new PointD(WatchZone.Geometry.Width, WatchZone.Geometry.Height), CompositeOperator.Copy);
                 underlay.RePage();
-                var mGeo = Screen.ThumbnailGeometry.ToMagick();
+                var mGeo = Scanner.CropGeometry.ToMagick(false);
                 mGeo.IgnoreAspectRatio = true;
                 underlay.Resize(mGeo);
                 underlay.RePage();
@@ -104,53 +120,6 @@ namespace VideoAutosplitterProto.Models
                 mi.Equalize();
             }
             MagickImage = mi;
-            Clear();
-        }
-
-        public void Clear()
-        {
-            _Image = null;
-        }
-
-        [XmlIgnore]
-        public ConcurrentBag<Bag> DeltaBag = new ConcurrentBag<Bag>();
-
-        public string DeltaBagCompact
-        {
-            get
-            {
-                var lb = new List<byte>();
-                foreach (var b in DeltaBag)
-                {
-                    lb.AddRange(BitConverter.GetBytes(b.FrameIndex));
-                    lb.AddRange(Utilities.FloatToBytes(b.Confidence));
-                }
-                return Convert.ToBase64String(lb.ToArray());
-            }
-            set
-            {
-                var lb = Convert.FromBase64String(value);
-                /*if (lb.Count() % 6 != 0)
-                {
-                    throw new Exception("Incorrect number of bytes. Conversion not possible.");
-                }*/
-                DeltaBag = new ConcurrentBag<Bag>();
-                for (int i = 0; i < lb.Count(); i += 6)
-                {
-                    var frameIndex = BitConverter.ToInt32(lb, i);
-                    var confidence = Utilities.BytesToFloat(lb[i + 4], lb[i + 5]);
-                    DeltaBag.Add(new Bag(frameIndex, confidence));
-                }
-            }
-        }
-
-        [XmlIgnore]
-        public List<Bag> DeltaList
-        {
-            get
-            {
-                return DeltaBag.ToList();
-            }
         }
 
         override public string ToString()
@@ -160,7 +129,5 @@ namespace VideoAutosplitterProto.Models
             else
                 return FileName;
         }
-
     }
-
 }

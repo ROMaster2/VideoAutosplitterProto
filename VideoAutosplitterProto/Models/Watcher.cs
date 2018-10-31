@@ -5,11 +5,11 @@ using System.Xml.Serialization;
 
 namespace VideoAutosplitterProto.Models
 {
-    public class Watcher : IGeometry
+    public class Watcher
     {
         internal Watcher(WatchZone watchZone, string name, double frequency = 1d, ColorSpace colorSpace = ColorSpace.RGB)
         {
-            Parent = watchZone;
+            WatchZone = watchZone;
             Name = name;
             ColorSpace = colorSpace;
             Frequency = frequency;
@@ -17,23 +17,25 @@ namespace VideoAutosplitterProto.Models
 
         internal Watcher() { }
 
+        public string Name;
+
         public double Frequency = 1d;
 
         public ColorSpace ColorSpace = ColorSpace.RGB;
         public int Channel = -1;
         public bool Equalize = true;
 
-        public ErrorMetric ErrorMetric = ErrorMetric.NormalizedCrossCorrelation;
+        public ErrorMetric ErrorMetric = ErrorMetric.PeakSignalToNoiseRatio;
 
-        public bool DupeFrameCheck = false;
-        //public CompositeOperator Compositer; // Todo
+        public WatcherType WatcherType = WatcherType.Standard;
+        public bool DupeFrameCheck = false; // To remove
 
         public List<WatchImage> WatchImages = new List<WatchImage>();
 
         [XmlIgnore]
         public Screen Screen { get { return WatchZone.Screen; } }
         [XmlIgnore]
-        public WatchZone WatchZone { get { return (WatchZone)Parent; } }
+        public WatchZone WatchZone { get; internal set; }
 
         public WatchImage AddWatchImage(string filePath)
         {
@@ -48,7 +50,7 @@ namespace VideoAutosplitterProto.Models
             {
                 foreach (var wi in WatchImages)
                 {
-                    wi.Parent = this;
+                    wi.Watcher = this;
                 }
             }
         }
@@ -57,7 +59,12 @@ namespace VideoAutosplitterProto.Models
         {
             return Name;
         }
-
     }
 
+    public enum WatcherType
+    {
+        Standard,
+        BestMatch,
+        DuplicateFrame
+    }
 }

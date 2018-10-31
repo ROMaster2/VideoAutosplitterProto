@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 
 namespace VideoAutosplitterProto.Models
 {
-    public class GameProfile : IGeometry
+    public class GameProfile
     {
         public GameProfile(string name)
         {
@@ -15,7 +15,9 @@ namespace VideoAutosplitterProto.Models
 
         internal GameProfile() { }
 
-        public List<Screen> Screens { get; set; } = new List<Screen>();
+        public string Name;
+
+        public List<Screen> Screens { get; internal set; } = new List<Screen>();
 
         [XmlIgnore]
         public List<WatchZone> WatchZones
@@ -39,15 +41,10 @@ namespace VideoAutosplitterProto.Models
             if (Screens.Count > 0) {
                 foreach (var s in Screens)
                 {
-                    s.Parent = this;
+                    s.GameProfile = this;
                     s.ReSyncRelationships();
                 }
             }
-        }
-
-        override public string ToString()
-        {
-            return Name;
         }
 
         public static GameProfile FromXml(string filePath)
@@ -68,6 +65,9 @@ namespace VideoAutosplitterProto.Models
             }
         }
 
+        override public string ToString()
+        {
+            return Name;
+        }
     }
-
 }

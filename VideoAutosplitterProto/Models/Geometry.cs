@@ -922,6 +922,12 @@ namespace VideoAutosplitterProto.Models
             }
         }
 
+        override public string ToString()
+        {
+            return Math.Round(Width, 4).ToString() + "x" + Math.Round(Height, 4).ToString() +
+                Math.Round(X, 4).ToString("+0.####;-#.####") + Math.Round(Y, 4).ToString("+0.####;-#.####");
+        }
+
         /// <summary>
         /// Inflate - return the result of inflating rect by the size provided, in all directions
         /// If this is Empty, this method is illegal.
@@ -980,11 +986,6 @@ namespace VideoAutosplitterProto.Models
                 // and make Height positive
                 _height *= -1;
             }
-        }
-
-        public Geometry Clone()
-        {
-            return (Geometry)MemberwiseClone();
         }
 
         #endregion Public Methods

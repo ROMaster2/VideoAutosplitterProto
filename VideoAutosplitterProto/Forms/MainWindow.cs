@@ -39,10 +39,10 @@ namespace VideoAutosplitterProto.Forms
             TryStart();
 
             Scanner.CropGeometry = new Geometry(
-                Properties.Settings.Default.CropX,
-                Properties.Settings.Default.CropY,
-                Properties.Settings.Default.CropWidth,
-                Properties.Settings.Default.CropHeight);
+               Properties.Settings.Default.CropX,
+               Properties.Settings.Default.CropY,
+               Properties.Settings.Default.CropWidth,
+               Properties.Settings.Default.CropHeight);
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
