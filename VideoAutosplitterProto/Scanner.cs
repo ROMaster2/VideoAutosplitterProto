@@ -24,6 +24,7 @@ namespace VideoAutosplitterProto
         private const int FEATURE_COUNT_LIMIT = 32;
 
         private static readonly Stopwatch Timer = new Stopwatch();
+        public static bool Scanning = false;
 
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();

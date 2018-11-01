@@ -9,6 +9,7 @@ namespace VideoAutosplitterProto
     {
         public static float[] floatArray = new float[32];
         public static long timeDelta = 0;
+        public static long count = 0;
 
         [STAThread]
         static void Main()
