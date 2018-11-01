@@ -259,6 +259,7 @@ namespace VideoAutosplitterProto
                             fileImageCropped.ColorSpace = CWatcher.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
                             using (var fileImageComposed = GetComposedImage(fileImageCropped, CWatcher.Channel))
                             {
+                                if (CWatcher.Equalize) fileImageComposed.Equalize();
                                 if (CWatcher.IsStandardCheck)
                                 {
                                     foreach (var CWatchImage in CWatcher.CWatchImages)
@@ -267,7 +268,6 @@ namespace VideoAutosplitterProto
                                         using (var fileImageCompare = fileImageComposed.Clone())
                                         {
                                             if (CWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
-                                            if (CWatcher.Equalize) fileImageCompare.Equalize();
 
                                             var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
                                             deltas[CWatchImage.Index] = imageDelta;
