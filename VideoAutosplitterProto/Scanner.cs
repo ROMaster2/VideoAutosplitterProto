@@ -245,6 +245,7 @@ namespace VideoAutosplitterProto
         public static void Run3(Scan scan)
         {
             //Scanning = true;
+            var deltas = new float[FEATURE_COUNT_LIMIT];
             using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
             {
                 Parallel.ForEach(CompiledFeatures.CWatchZones, (CWatchZone) =>
@@ -268,7 +269,7 @@ namespace VideoAutosplitterProto
                                             if (CWatcher.Equalize) fileImageCompare.Equalize();
 
                                             var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
-                                            Interlocked.Exchange(ref Program.floatArray[CWatchImage.Index], imageDelta);
+                                            deltas[CWatchImage.Index] = imageDelta;
                                             /*
                                             if (CurrentIndex % 300 == 0 && CWatchImage.Index == 0)
                                             {
@@ -303,7 +304,7 @@ namespace VideoAutosplitterProto
                                             if (CWatcher.Equalize) fileImageCompare.Equalize();
 
                                             var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
-                                            Interlocked.Exchange(ref Program.floatArray[18], imageDelta);
+                                            deltas[31] = imageDelta;
                                         }
                                     }
                                 }
@@ -313,7 +314,11 @@ namespace VideoAutosplitterProto
                 });
             }
             Scanning = false;
+            deltas[19] = 456.789F;
+            Interlocked.Exchange(ref Program.floatArray, deltas);
             Interlocked.Exchange(ref Program.timeDelta, scan.TimeDelta);
+            Interlocked.Increment(ref Program.count);
+            scan.Clean();
         }
 
         /*
