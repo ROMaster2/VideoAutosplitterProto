@@ -231,16 +231,20 @@ namespace VideoAutosplitterProto
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
             var now = Timer.ElapsedTicks; // Would use Milliseconds but those are truncated.
-            var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
-            CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
-            CurrentIndex++;
-            Run3(newScan);
-            newScan.Clean();
+            if (!Scanning)
+            {
+                var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
+                CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
+                CurrentIndex++;
+                //Run3(newScan);
+                Task.Run(() => Run3(newScan));
+            }
         }
 
         // Todo: Make into array returning task
         public static void Run3(Scan scan)
         {
+            //Scanning = true;
             using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
             {
                 Parallel.ForEach(CompiledFeatures.CWatchZones, (CWatchZone) =>
@@ -308,6 +312,7 @@ namespace VideoAutosplitterProto
                     }
                 });
             }
+            Scanning = false;
             Interlocked.Exchange(ref Program.timeDelta, scan.TimeDelta);
         }
 
