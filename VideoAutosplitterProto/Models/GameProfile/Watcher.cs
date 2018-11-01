@@ -21,7 +21,7 @@ namespace VideoAutosplitterProto.Models
 
         public double Frequency = 1d;
 
-        public ColorSpace ColorSpace = ColorSpace.RGB;
+        public ColorSpace ColorSpace = ColorSpace.sRGB;
         public int Channel = -1;
         public bool Equalize = true;
 
@@ -59,12 +59,5 @@ namespace VideoAutosplitterProto.Models
         {
             return Name;
         }
-    }
-
-    public enum WatcherType
-    {
-        Standard,
-        BestMatch,
-        DuplicateFrame
     }
 }

@@ -13,6 +13,7 @@ using VideoAutosplitterProto.Forms;
 using VideoAutosplitterProto.Models;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 
 using Size = System.Drawing.Size;
 
@@ -22,13 +23,13 @@ namespace VideoAutosplitterProto
     {
         private const int FEATURE_COUNT_LIMIT = 32;
 
+        private static readonly Stopwatch Timer = new Stopwatch();
+
         public static GameProfile GameProfile = null;
         private static VideoCaptureDevice VideoSource = new VideoCaptureDevice();
 
         public static Frame CurrentFrame = Frame.Blank;
-        public static List<Scan> ScanBag = new List<Scan>();
-        public static DateTime MostRecentFrameTime = DateTime.UtcNow;
-        public static int CurrentIndex = 0;
+        public static int CurrentIndex = 0; // Used only for debugging. Remove on release.
 
         public static bool ExtremePrecision = false;
 
@@ -38,10 +39,11 @@ namespace VideoAutosplitterProto
             get
             {
                 // Hack method because async sucks
-                if (_VideoGeometry.IsBlank && !IsVideoSourceRunning() && IsVideoSourceValid())
+                if (!_VideoGeometry.HasSize && IsVideoSourceValid())
                 {
                     VideoSource.Start();
-                    while (_VideoGeometry.IsBlank) Thread.Sleep(1);
+                    SubscribeToFrameHandler(SetFrameSize);
+                    while (!_VideoGeometry.HasSize) Thread.Sleep(1);
                 }
                 return _VideoGeometry;
             }
@@ -52,7 +54,7 @@ namespace VideoAutosplitterProto
         {
             get
             {
-                if (_CropGeometry.IsBlank)
+                if (!_CropGeometry.HasSize)
                 {
                     _CropGeometry = VideoGeometry;
                 }
@@ -71,7 +73,7 @@ namespace VideoAutosplitterProto
         {
             get
             {
-                if (_TrueCropGeometry.IsBlank)
+                if (!_TrueCropGeometry.HasSize)
                 {
                     if (GameProfile != null)
                     {
@@ -111,29 +113,9 @@ namespace VideoAutosplitterProto
             {
                 if (_NeedExtent == null)
                 {
-                    _NeedExtent = !_VideoGeometry.Contains(TrueCropGeometry);
+                    _NeedExtent = !VideoGeometry.Contains(TrueCropGeometry);
                 }
                 return (bool)_NeedExtent;
-            }
-        }
-
-        public static void Stop()
-        {
-            ScanBag.Clear();
-            MostRecentFrameTime = DateTime.UtcNow;
-            CurrentIndex = 0;
-            VideoSource.Stop();
-        }
-
-        public static void Start()
-        {
-            if (GameProfile != null)
-            {
-                ScanBag.Clear();
-                MostRecentFrameTime = DateTime.UtcNow;
-                CurrentIndex = 0;
-                UpdateCropGeometry();
-                VideoSource.Start();
             }
         }
 
@@ -147,22 +129,20 @@ namespace VideoAutosplitterProto
             return VideoSource.IsRunning;
         }
 
-        public static void SetVideoSource(string monikerString)
-        {
-            _VideoGeometry = Geometry.Blank;
-            VideoSource.Source = monikerString;
-            SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
-            ResetCropGeometry();
-        }
-
         public static void SubscribeToFrameHandler(NewFrameEventHandler method)
         {
             VideoSource.NewFrame += method;
         }
 
-        public static void UnsubscribeToFrameHandler(NewFrameEventHandler method)
+        public static void UnsubscribeFromFrameHandler(NewFrameEventHandler method)
         {
             VideoSource.NewFrame -= method;
+        }
+
+        public static void SetVideoSource(string monikerString)
+        {
+            _VideoGeometry = Geometry.Blank;
+            VideoSource.Source = monikerString;
         }
 
         public static Geometry ResetCropGeometry()
@@ -172,12 +152,34 @@ namespace VideoAutosplitterProto
             return CropGeometry;
         }
 
+        public static void Stop()
+        {
+            CurrentIndex = 0;
+            Timer.Reset();
+            UnsubscribeFromFrameHandler(new NewFrameEventHandler(HandleNewFrame));
+            VideoSource.Stop();
+        }
+
+        public static void Start()
+        {
+            UpdateCropGeometry();
+            if (GameProfile != null)
+            {
+                CurrentIndex = 0;
+                Timer.Start();
+                SubscribeToFrameHandler(new NewFrameEventHandler(HandleNewFrame));
+                VideoSource.Start();
+            }
+        }
+
         public static void UpdateCropGeometry()
         {
             _NeedExtent = null;
             _TrueCropGeometry = Geometry.Blank;
             if (GameProfile != null)
             {
+                // TO REMOVE
+                // I'm afraid that removing it will break things so that'll happen later.
                 int i = 0;
                 foreach (var wz in GameProfile.Screens[0].WatchZones)
                 {
@@ -194,36 +196,121 @@ namespace VideoAutosplitterProto
                         i++;
                     }
                 }
+
+                foreach (var s in GameProfile.Screens)
+                {
+                    s.CropGeometry = Scanner.CropGeometry;
+                }
+
+                CompiledFeatures.Compile(GameProfile, false);
+
             }
         }
 
         // May need to update to support multiple channels.
-        private static MagickImage Untitled(MagickImage input, int channelIndex)
+        private static IMagickImage GetComposedImage(IMagickImage input, int channelIndex)
         {
-            MagickImage mi = (MagickImage)input.Clone();
+            IMagickImage mi = input.Clone();
             if (channelIndex > -1)
             {
-                mi = (MagickImage)mi.Separate().ToArray()[channelIndex];
+                mi = mi.Separate().ToArray()[channelIndex];
             }
             return mi;
         }
 
+        // Hacky but it saves on CPU for the scanner.
+        public static void SetFrameSize(object sender, NewFrameEventArgs e)
+        {
+            if (_VideoGeometry.IsBlank)
+            {
+                _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
+                UnsubscribeFromFrameHandler(SetFrameSize);
+            }
+        }
+
         public static void HandleNewFrame(object sender, NewFrameEventArgs e)
         {
-            var now = DateTime.UtcNow;
+            var now = Timer.ElapsedTicks; // Would use Milliseconds but those are truncated.
             var newScan = new Scan(new Frame(now, (Bitmap)e.Frame.Clone()), CurrentFrame.Clone());
             CurrentFrame = new Frame(now, (Bitmap)e.Frame.Clone());
             CurrentIndex++;
-
-            if (_VideoGeometry.Size.IsEmpty) _VideoGeometry = new Geometry(e.Frame.Size.ToWindows());
-
-            if (GameProfile != null)
-            {
-                Run2(newScan);
-            }
-
+            Run3(newScan);
+            newScan.Clean();
         }
 
+        // Todo: Make into array returning task
+        public static void Run3(Scan scan)
+        {
+            using (var fileImageBase = new MagickImage(scan.CurrentFrame.Bitmap))
+            {
+                Parallel.ForEach(CompiledFeatures.CWatchZones, (CWatchZone) =>
+                {
+                    var thumbGeo = CWatchZone.MagickGeometry;
+                    using (var fileImageCropped = fileImageBase.Clone(CWatchZone.MagickGeometry))
+                    {
+                        foreach (var CWatcher in CWatchZone.CWatches)
+                        {
+                            fileImageCropped.ColorSpace = CWatcher.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
+                            using (var fileImageComposed = GetComposedImage(fileImageCropped, CWatcher.Channel))
+                            {
+                                if (CWatcher.IsStandardCheck)
+                                {
+                                    foreach (var CWatchImage in CWatcher.CWatchImages)
+                                    {
+                                        using (var deltaImage = CWatchImage.MagickImage.Clone())
+                                        using (var fileImageCompare = fileImageComposed.Clone())
+                                        {
+                                            if (CWatcher.Equalize) fileImageCompare.Equalize();
+
+                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
+                                            Interlocked.Exchange(ref Program.floatArray[CWatchImage.Index], imageDelta);
+                                            /*
+                                            if (CurrentIndex % 300 == 0 && CWatchImage.Index == 0)
+                                            {
+                                                fileImageCompare.Write(@"E:\test2.png");
+                                                deltaImage.Write(@"E:\test3.png");
+                                                fileImageComposed.Write(@"E:\test4.png");
+                                                fileImageCropped.Write(@"E:\test5.png");
+                                                fileImageBase.Write(@"E:\test6.png");
+                                            }
+                                            */
+                                        }
+                                    }
+                                }
+                                else if (CWatcher.IsDuplicateFrameCheck)
+                                {
+                                    using (var deltaImagePre = new MagickImage((Bitmap)scan.PreviousFrame.Bitmap.Clone()))
+                                    using (var fileImageCompare = (MagickImage)fileImageComposed.Clone())
+                                    {
+                                        if (NeedExtent)
+                                        {
+                                            deltaImagePre.Extent(TrueCropGeometry.ToMagick(), Gravity.Northwest, MagickColor.FromRgba(0, 0, 0, 0));
+                                        }
+                                        else
+                                        {
+                                            deltaImagePre.Crop(TrueCropGeometry.ToMagick(), Gravity.Northwest);
+                                        }
+                                        deltaImagePre.RePage();
+                                        deltaImagePre.Crop(thumbGeo, Gravity.Northwest);
+                                        deltaImagePre.ColorSpace = CWatcher.ColorSpace;
+                                        using (var deltaImage = GetComposedImage(deltaImagePre, CWatcher.Channel))
+                                        {
+                                            if (CWatcher.Equalize) fileImageCompare.Equalize();
+
+                                            var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
+                                            Interlocked.Exchange(ref Program.floatArray[18], imageDelta);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            Interlocked.Exchange(ref Program.timeDelta, scan.TimeDelta);
+        }
+
+        /*
         // Todo: Make into array returning task
         public static void Run2(Scan scan)
         {
@@ -250,12 +337,14 @@ namespace VideoAutosplitterProto
                                             if (w.Equalize) fileImageCompare.Equalize();
 
                                             var imageDelta = (float)deltaImage.Compare(fileImageCompare, w.ErrorMetric);
-                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], imageDelta);
 
-                                            if (CurrentIndex % 300 == 0 && wi.Index == 0)
+                                            Interlocked.Exchange(ref Program.floatArray[wi.Index], imageDelta);
+                                            //var debug = Program.floatArray[wi.Index];
+
+                                            if (CurrentIndex % 300 == 0 && imageDelta > 0 && (imageDelta < 0.001 || imageDelta > 10000))
                                             {
-                                                //fileImageCompare.Write(@"E:\test2.png");
-                                                //deltaImage.Write(@"E:\test3.png");
+                                                fileImageCompare.Write(@"E:\test2.png");
+                                                deltaImage.Write(@"E:\test3.png");
                                             }
                                         }
                                     }
@@ -293,11 +382,11 @@ namespace VideoAutosplitterProto
                 });
                 //}
             }
-            var timeDelta = scan.TimeDelta();
-            Interlocked.Exchange(ref Program.timeDelta, timeDelta);
+            Interlocked.Exchange(ref Program.timeDelta, scan.TimeDelta);
             scan.Clean();
         }
-
+        */
+        /*
         // Todo: Make into array returning task
         public static void Run(Scan scan)
         {
@@ -402,7 +491,8 @@ namespace VideoAutosplitterProto
             }
             scan.Clean();
         }
-
+        */
+        /*
         public static void RunOld()
         {
             while (true)
@@ -456,15 +546,15 @@ namespace VideoAutosplitterProto
                                                                 ErrorMetric.NormalizedCrossCorrelation);
                                                             Interlocked.Exchange(ref Program.floatArray[wi.Index], a);
 
-                                                            /*
-                                                            if (i % 300 == 0 && wi.index == 1)
-                                                            {
-                                                                fileImageCompare.Write(@"E:\test2.png");
-                                                                deltaImage.Write(@"E:\test3.png");
-                                                                fileImageComposed.Write(@"E:\test4.png");
-                                                                fileImageCropped.Write(@"E:\test5.png");
-                                                                fileImageBase.Write(@"E:\test6.png");
-                                                            }*/
+                                                            
+                                                            //if (i % 300 == 0 && wi.index == 1)
+                                                            //{
+                                                            //    fileImageCompare.Write(@"E:\test2.png");
+                                                            //    deltaImage.Write(@"E:\test3.png");
+                                                            //    fileImageComposed.Write(@"E:\test4.png");
+                                                            //    fileImageCropped.Write(@"E:\test5.png");
+                                                            //    fileImageBase.Write(@"E:\test6.png");
+                                                            //}
 
                                                             //int id = (int)Math.Round(thumbID * timeIndexMultiplier);
                                                             //wi.DeltaBag.Add(new Bag(id, delta));
@@ -534,6 +624,6 @@ namespace VideoAutosplitterProto
                 Thread.Sleep(500);
             }
         }
-
+        */
     }
 }

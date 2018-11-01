@@ -31,10 +31,18 @@ namespace VideoAutosplitterProto.Forms
             {
                 try
                 {
-                    Scanner.GameProfile = GameProfile.FromXml(savedProfile);
+                    Scanner.GameProfile = GameProfile.FromZip(savedProfile);
                     txtGameProfile.Text = savedProfile;
                 }
-                catch (Exception) { }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine("Game Profile failed to load.");
+                    System.Diagnostics.Debug.WriteLine(e.ToString());
+                }
+                finally
+                {
+                    if (Scanner.GameProfile == null) txtGameProfile.Text = null;
+                }
             }
             TryStart();
 
@@ -53,12 +61,12 @@ namespace VideoAutosplitterProto.Forms
 
         private void BtnGameProfile_Click(object sender, EventArgs e)
         {
-            using (var ofd = new OpenFileDialog() { Filter = "XML Files|*.xml", Title = "Load a Game Profile" } )
+            using (var ofd = new OpenFileDialog() { Filter = "Zip Files|*.zip", Title = "Load a Game Profile" } )
             {
                 if (ofd.ShowDialog() == DialogResult.OK && ofd.CheckFileExists == true)
                 {
                     retry:
-                    var gp = GameProfile.FromXml(ofd.FileName);
+                    var gp = GameProfile.FromZip(ofd.FileName);
 
                     if (gp == null)
                     {

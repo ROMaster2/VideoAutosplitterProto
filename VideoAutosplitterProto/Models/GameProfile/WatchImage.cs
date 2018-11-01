@@ -40,8 +40,8 @@ namespace VideoAutosplitterProto.Models
             }
         }
 
-        private Image _Image;
-        public Image Image
+        private Bitmap _Image;
+        public Bitmap Image
         {
             get
             {
@@ -49,7 +49,7 @@ namespace VideoAutosplitterProto.Models
                 {
                     if (File.Exists(FilePath))
                     {
-                        _Image = Image.FromFile(FilePath);
+                        _Image = new Bitmap(FilePath);
                     }
                     else
                     {
@@ -57,6 +57,11 @@ namespace VideoAutosplitterProto.Models
                     }
                 }
                 return _Image;
+            }
+            set
+            {
+                Dispose();
+                _Image = value;
             }
         }
 
@@ -120,6 +125,14 @@ namespace VideoAutosplitterProto.Models
                 mi.Equalize();
             }
             MagickImage = mi;
+        }
+
+        public void Dispose()
+        {
+            if (_Image != null)
+            {
+                _Image.Dispose();
+            }
         }
 
         override public string ToString()

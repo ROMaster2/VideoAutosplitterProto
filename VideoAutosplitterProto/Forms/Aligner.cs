@@ -57,7 +57,7 @@ namespace VideoAutosplitterProto.Forms
 
         private void Aligner_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Scanner.UnsubscribeToFrameHandler(HandleNewFrame);
+            Scanner.UnsubscribeFromFrameHandler(HandleNewFrame);
             Properties.Settings.Default.CropX = Scanner.CropGeometry.X;
             Properties.Settings.Default.CropY = Scanner.CropGeometry.Y;
             Properties.Settings.Default.CropWidth = Scanner.CropGeometry.Width;

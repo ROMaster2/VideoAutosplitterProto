@@ -1,24 +1,21 @@
-﻿using System;
-using System.Drawing;
-
-namespace VideoAutosplitterProto
+﻿namespace VideoAutosplitterProto.Models
 {
     public struct Scan
     {
         public Frame CurrentFrame;
         public Frame PreviousFrame;
+        public bool IsCleaned;
+        public long TimeDelta;
+
         public Scan(Frame currentFrame, Frame previousFrame)
         {
             CurrentFrame = currentFrame;
             PreviousFrame = previousFrame;
+            IsCleaned = false;
+            TimeDelta = CurrentFrame.Timestamp - PreviousFrame.Timestamp;
         }
 
         public static readonly Scan Blank = new Scan(Frame.Blank, Frame.Blank);
-
-        public int TimeDelta()
-        {
-            return (int)(CurrentFrame.DateTime - PreviousFrame.DateTime).TotalMilliseconds;
-        }
 
         public void Update(Frame newFrame)
         {
@@ -26,41 +23,12 @@ namespace VideoAutosplitterProto
             PreviousFrame = CurrentFrame;
             CurrentFrame = newFrame;
         }
+
         public void Clean()
         {
+            IsCleaned = true;
             CurrentFrame.Bitmap.Dispose();
             PreviousFrame.Bitmap.Dispose();
-        }
-        public bool IsCleaned()
-        {
-            try
-            {
-                var x = PreviousFrame.Bitmap.Height;
-                return false;
-            }
-            catch (Exception)
-            {
-                return true;
-            }
-        }
-    }
-
-    public struct Frame // Bad name idea?
-    {
-        public DateTime DateTime;
-        public Bitmap Bitmap;
-
-        public Frame(DateTime dateTime, Bitmap bitmap)
-        {
-            DateTime = dateTime;
-            Bitmap = bitmap;
-        }
-
-        public static readonly Frame Blank = new Frame(new DateTime(0), new Bitmap(1, 1));
-
-        public Frame Clone()
-        {
-            return new Frame(DateTime, (Bitmap)Bitmap.Clone());
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿/**
  * Since I couldn't find any shape class that included alignment/gravity/anchor logic, I
  * implemented my own. The below is derived from System.Windows.Rect.
+ * 
+ * This ultimately should be made very portable.
  */
 
 using System;

@@ -10,7 +10,11 @@ namespace VideoAutosplitterProto.Models
 {
     public static class CompiledFeatures
     {
-        public static void Compile(GameProfile gameProfile)
+        public static CWatchZone[] CWatchZones { get; internal set; }
+        public static bool HasDupeCheck { get; internal set; }
+        public static bool UseExtremePrecision { get; internal set; }
+
+        public static void Compile(GameProfile gameProfile, bool useExtremePrecision)
         {
             if (CWatchZones != null)
             {
@@ -18,8 +22,10 @@ namespace VideoAutosplitterProto.Models
                 {
                     cWatchZone.Dispose();
                 }
-                CWatchZones.Clear();
+                Array.Clear(CWatchZones, 0, CWatchZones.Length);
             }
+            HasDupeCheck = false;
+            UseExtremePrecision = useExtremePrecision;
 
             var cWatchZones = new CWatchZone[gameProfile.WatchZones.Count];
             var indexCount = 0;
@@ -31,33 +37,29 @@ namespace VideoAutosplitterProto.Models
 
                 var CWatches = new CWatcher[watchZone.Watches.Count];
 
-                // If it's a game with user definable resolution, use what they've set.
-                // Otherwise, assume the base resolution.
                 var gameGeo = screen.GameGeometry.HasSize ? screen.GameGeometry : screen.Geometry;
-                // Redefine parent geometry and adjust size and offset accordingly
                 var wzCropGeo = watchZone.WithoutScale(gameGeo);
-                // Relative position known, anchor no longer needed.
                 wzCropGeo.RemoveAnchor(gameGeo);
-                // Change size to fit the geometry on the video capture
                 wzCropGeo.ResizeTo(screen.CropGeometry, gameGeo);
-                // Add the video capture's offset
                 wzCropGeo.Update(screen.CropGeometry.X, screen.CropGeometry.Y);
 
                 for (int i2 = 0; i2 < watchZone.Watches.Count; i2++)
                 {
                     Watcher watcher = watchZone.Watches[i2];
-                    var CWatchImages = new CWatchImage[watcher.WatchImages.Count];
 
-                    for (int i3 = 0; i3 < watcher.WatchImages.Count; i3++)
+                    if (watcher.WatcherType == WatcherType.Standard)
                     {
-                        WatchImage watchImage = watcher.WatchImages[i3];
-                        if (watcher.WatcherType == WatcherType.Standard)
+                        var CWatchImages = new CWatchImage[watcher.WatchImages.Count];
+
+                        for (int i3 = 0; i3 < watcher.WatchImages.Count; i3++)
                         {
-                            var mi = new MagickImage((Bitmap)watchImage.Image.Clone())
+                            WatchImage watchImage = watcher.WatchImages[i3];
+                            var mi = new MagickImage(watchImage.Image)
                             {
                                 ColorSpace = watcher.ColorSpace
                             };
-                            if (!Scanner.ExtremePrecision)
+                            GetComposedImage(ref mi, watcher.Channel);
+                            if (!UseExtremePrecision)
                             {
                                 StandardResize(ref mi, wzCropGeo.ToMagick(false));
                             }
@@ -71,17 +73,45 @@ namespace VideoAutosplitterProto.Models
                             }
 
                             CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
-                        } else if (watcher.WatcherType == WatcherType.DuplicateFrame)
-                        {
-                            CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount);
-                        } else if (watcher.WatcherType == WatcherType.BestMatch)
-                        {
-
+                            indexCount++;
                         }
-                        indexCount++;
-                    }
 
-                    CWatches[i2] = new CWatcher(CWatchImages, watcher);
+                        CWatches[i2] = new CWatcher(CWatchImages, watcher);
+                    }
+                    else if (watcher.WatcherType == WatcherType.BestMatch)
+                    {
+                        var mic = new MagickImageCollection();
+                        for (int i3 = 0; i3 < watcher.WatchImages.Count; i3++)
+                        {
+                            WatchImage watchImage = watcher.WatchImages[i3];
+                            var mi = new MagickImage(watchImage.FilePath)
+                            {
+                                ColorSpace = watcher.ColorSpace
+                            };
+                            GetComposedImage(ref mi, watcher.Channel);
+                            if (!UseExtremePrecision)
+                            {
+                                StandardResize(ref mi, wzCropGeo.ToMagick(false));
+                            }
+                            else
+                            {
+                                PreciseResize(ref mi, watchZone.Geometry, gameGeo);
+                            }
+                            if (watcher.Equalize)
+                            {
+                                mi.Equalize();
+                            }
+
+                            //CWatchImages[i3] = new CWatchImage(watchImage.Name, indexCount, mi);
+                            indexCount++;
+                        }
+
+
+                    }
+                    else if (watcher.WatcherType == WatcherType.DuplicateFrame)
+                    {
+                        HasDupeCheck = true;
+                    }
                 }
 
                 cWatchZones[i1] = new CWatchZone(watchZone.Name, wzCropGeo, CWatches);
@@ -113,36 +143,59 @@ namespace VideoAutosplitterProto.Models
             mi = underlay;
         }
 
-        public static ICollection<CWatchZone> CWatchZones { get; internal set; }
+        // May need to update to support multiple channels.
+        // Todo: Put this elsewhere. It's copied from Scanner.cs...
+        public static void GetComposedImage(ref MagickImage mi, int channelIndex)
+        {
+            if (channelIndex > -1)
+            {
+                var mic = mi.Separate();
+                mi.Dispose();
+                int i = 0;
+                foreach (var x in mic)
+                {
+                    if (i == channelIndex)
+                    {
+                        mi = (MagickImage)x;
+                    }
+                    else
+                    {
+                        x.Dispose();
+                    }
+                    i++;
+                }
+            }
+        }
+
     }
 
     public struct CWatchZone
     {
-        public CWatchZone(string name, Geometry geometry, ICollection<CWatcher> cWatchers)
+        public CWatchZone(string name, Geometry geometry, CWatcher[] cWatches)
         {
             Name = name;
             TrueGeometry = geometry;
             MagickGeometry = geometry.ToMagick();
-            CWatchers = cWatchers;
+            CWatches = cWatches;
         }
         public string Name;
         public Geometry TrueGeometry;
         public MagickGeometry MagickGeometry;
-        public ICollection<CWatcher> CWatchers;
+        public CWatcher[] CWatches;
         public void Dispose()
         {
-            foreach (var x in CWatchers)
+            foreach (var x in CWatches)
             {
                 x.Dispose();
             }
-            CWatchers.Clear();
+            Array.Clear(CWatches, 0, CWatches.Length);
         }
     }
 
     public struct CWatcher
     {
         public CWatcher(
-            ICollection<CWatchImage> cWatchImages,
+            CWatchImage[] cWatchImages,
             string name,
             WatcherType watcherType,
             ColorSpace colorSpace,
@@ -158,8 +211,12 @@ namespace VideoAutosplitterProto.Models
             Equalize = equalize;
             ErrorMetric = errorMetric;
             CWatchImages = cWatchImages;
+
+            IsStandardCheck = WatcherType.Equals(WatcherType.Standard);
+            IsDuplicateFrameCheck = WatcherType.Equals(WatcherType.DuplicateFrame);
+            IsBestMatchCheck = WatcherType.Equals(WatcherType.BestMatch);
         }
-        public CWatcher(ICollection<CWatchImage> cWatchImages, Watcher watcher)
+        public CWatcher(CWatchImage[] cWatchImages, Watcher watcher)
         {
             Name = watcher.Name;
             WatcherType = watcher.WatcherType;
@@ -168,21 +225,31 @@ namespace VideoAutosplitterProto.Models
             Equalize = watcher.Equalize;
             ErrorMetric = watcher.ErrorMetric;
             CWatchImages = cWatchImages;
+
+            IsStandardCheck = WatcherType.Equals(WatcherType.Standard);
+            IsDuplicateFrameCheck = WatcherType.Equals(WatcherType.DuplicateFrame);
+            IsBestMatchCheck = WatcherType.Equals(WatcherType.BestMatch);
         }
+
         public string Name;
         public WatcherType WatcherType;
         public ColorSpace ColorSpace;
         public int Channel;
         public bool Equalize;
         public ErrorMetric ErrorMetric;
-        public ICollection<CWatchImage> CWatchImages;
+        public CWatchImage[] CWatchImages;
+
+        public bool IsStandardCheck;
+        public bool IsDuplicateFrameCheck;
+        public bool IsBestMatchCheck;
+
         public void Dispose()
         {
             foreach (var x in CWatchImages)
             {
                 x.Dispose();
             }
-            CWatchImages.Clear();
+            Array.Clear(CWatchImages, 0, CWatchImages.Length);
         }
     }
 
