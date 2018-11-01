@@ -254,7 +254,7 @@ namespace VideoAutosplitterProto
                     var thumbGeo = CWatchZone.MagickGeometry;
                     using (var fileImageCropped = fileImageBase.Clone(CWatchZone.MagickGeometry))
                     {
-                        foreach (var CWatcher in CWatchZone.CWatches)
+                        Parallel.ForEach(CWatchZone.CWatches, (CWatcher) =>
                         {
                             fileImageCropped.ColorSpace = CWatcher.ColorSpace; // Can safely change since it doesn't directly affect pixel data.
                             using (var fileImageComposed = GetComposedImage(fileImageCropped, CWatcher.Channel))
@@ -262,7 +262,7 @@ namespace VideoAutosplitterProto
                                 if (CWatcher.Equalize) fileImageComposed.Equalize();
                                 if (CWatcher.IsStandardCheck)
                                 {
-                                    foreach (var CWatchImage in CWatcher.CWatchImages)
+                                    Parallel.ForEach(CWatcher.CWatchImages, (CWatchImage) =>
                                     {
                                         using (var deltaImage = CWatchImage.MagickImage.Clone())
                                         using (var fileImageCompare = fileImageComposed.Clone())
@@ -282,7 +282,7 @@ namespace VideoAutosplitterProto
                                             }
                                             */
                                         }
-                                    }
+                                    });
                                 }
                                 else if (CWatcher.IsDuplicateFrameCheck)
                                 {
@@ -310,7 +310,7 @@ namespace VideoAutosplitterProto
                                     }
                                 }
                             }
-                        }
+                        });
                     }
                 });
             }
