@@ -261,6 +261,7 @@ namespace VideoAutosplitterProto.Models
             Index = index;
             MagickImage = null;
             MagickImageCollection = null;
+            HasAlpha = false;
         }
         public CWatchImage(string name, int index, IMagickImage magickImage)
         {
@@ -268,6 +269,7 @@ namespace VideoAutosplitterProto.Models
             Index = index;
             MagickImage = magickImage;
             MagickImageCollection = null;
+            HasAlpha = MagickImage.HasAlpha;
         }
         public CWatchImage(string name, int index, IMagickImageCollection magickImageCollection)
         {
@@ -275,10 +277,12 @@ namespace VideoAutosplitterProto.Models
             Index = index;
             MagickImage = null;
             MagickImageCollection = magickImageCollection;
+            HasAlpha = false;
         }
         public string Name;
         public int Index;
         public IMagickImage MagickImage;
+        public bool HasAlpha;
         public IMagickImageCollection MagickImageCollection;
         public void Dispose()
         {

@@ -260,6 +260,7 @@ namespace VideoAutosplitterProto
                                         using (var deltaImage = CWatchImage.MagickImage.Clone())
                                         using (var fileImageCompare = fileImageComposed.Clone())
                                         {
+                                            if (CWatchImage.HasAlpha) fileImageCompare.Composite(deltaImage, CompositeOperator.CopyAlpha);
                                             if (CWatcher.Equalize) fileImageCompare.Equalize();
 
                                             var imageDelta = (float)deltaImage.Compare(fileImageCompare, CWatcher.ErrorMetric);
